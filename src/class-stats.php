@@ -9,7 +9,7 @@ class Stats
         global $wpdb;
 
         // if end date is a future date, cap it at today so that relative differences to previous period are fair
-        $today = gmdate('Y-m-d');
+        $today = create_local_datetime('now')->format('Y-m-d');
         if ($end_date > $today) {
             $end_date = $today;
         }
@@ -77,7 +77,7 @@ class Stats
             } else {
                 /* TODO: Optimize this */
                 $post = get_post($row->id);
-                $row->post_title = get_the_title($post);
+                $row->post_title = isset($post->post_title) ? $post->post_title : $post->post_name;
                 $row->post_permalink = get_permalink($post);
             }
 

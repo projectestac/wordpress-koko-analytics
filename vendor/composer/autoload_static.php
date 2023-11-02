@@ -17,6 +17,7 @@ class ComposerStaticInit5608d862d297e8b27a53ff3412c837aa
         'KokoAnalytics\\Aggregator' => __DIR__ . '/../..' . '/src/class-aggregator.php',
         'KokoAnalytics\\Command' => __DIR__ . '/../..' . '/src/class-command.php',
         'KokoAnalytics\\Dashboard' => __DIR__ . '/../..' . '/src/class-dashboard.php',
+        'KokoAnalytics\\Dashboard_Widget' => __DIR__ . '/../..' . '/src/class-dashboard-widget.php',
         'KokoAnalytics\\Dates' => __DIR__ . '/../..' . '/src/class-dates.php',
         'KokoAnalytics\\Endpoint_Installer' => __DIR__ . '/../..' . '/src/class-endpoint-installer.php',
         'KokoAnalytics\\Migrations' => __DIR__ . '/../..' . '/src/class-migrations.php',

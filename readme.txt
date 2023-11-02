@@ -1,10 +1,10 @@
 === Koko Analytics ===
 Contributors: Ibericode, DvanKooten
-Donate link: https://opencollective.com/koko-analytics
-Tags: analytics, statistics, stats, koko
+Donate link: https://www.kokoanalytics.com/pricing/
+Tags: analytics, statistics, stats, privacy, pageviews
 Requires at least: 6.0
-Tested up to: 6.3
-Stable tag: 1.3.0
+Tested up to: 6.4
+Stable tag: 1.3.2
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Requires PHP: 7.3
@@ -34,7 +34,7 @@ Koko Analytics lets you focus on what is important and gives you all the essenti
 - **Event Tracking**: You can set up custom event tracking through [Koko Analytics Pro](https://www.kokoanalytics.com/pricing/).
 - **Referrer spam:** Built-in blocklist to filter out referrer spam.
 - **Cached**: Fully compatible with pages served from any kind of cache.
-- **Open-Source**: Code is released under the GPL 3.0 license.
+- **Open-Source**: The plugin code is open-sourced under the GPL-3.0-or-later license.
 - **Tested**: Ready for PHP 8.3, but compatible down to PHP 7.3.
 - **AMP**: Tracks AMP powered pages too ([official AMP plugin](https://wordpress.org/plugins/amp/) only).
 
@@ -44,16 +44,23 @@ You can contribute to Koko Analytics in many different ways. For example:
 
 - [Purchase Koko Analytics Pro](https://www.kokoanalytics.com/pricing/)
 - Write about the plugin on your blog or share it on social media.
+- [Review the plugin here on WordPress.org](https://wordpress.org/support/plugin/koko-analytics/reviews/#new-post)
 - [Translate the plugin into your language](https://translate.wordpress.org/projects/wp-plugins/koko-analytics/stable/) using your WordPress.org account.
 - [Vote on feature suggestions in our idea board](https://github.com/ibericode/koko-analytics/discussions/categories/ideas?discussions_q=is%3Aopen+sort%3Atop+created%3A%3E%3D2022-10-25+category%3AIdeas)
 
 
 == Installation ==
 
-1. In your WordPress admin area, go to **Plugins > New Plugin**, search for **Koko Analytics** and click **Install now**.
-1. Alternatively, [download the plugin files](https://downloads.wordpress.org/plugin/koko-analytics.trunk.zip) and upload the contents of `koko-analytics.zip` to your plugins directory, which usually is `/wp-content/plugins/`.
-1. Activate the plugin. Koko Analytics will start recording stats right away.
-1. Access your analytics by browsing to *Dashboard > Analytics* in your WordPress admin area.
+You can install Koko Analytics in multiple ways:
+
+- In your WordPress admin area, go to **Plugins > New Plugin**, search for **Koko Analytics** and click **Install now**.
+- [Download the latest version from WordPress.org](https://downloads.wordpress.org/plugin/koko-analytics.zip) and extract the files into your `/wp-content/plugins/` directory.
+- [Download the latest release from GitHub](https://github.com/ibericode/koko-analytics/releases) and extract the files into your `/wp-content/plugins/` directory.
+
+After installing and then activating the plugin, statistics will be collected right away.
+
+You can view your analytics dashboard by going to **WP Admin > Dashboard > Analytics**.
+
 
 == Frequently Asked Questions ==
 
@@ -74,30 +81,11 @@ In fact, because the plugin does not depend on any external services it is usual
 ### No pageviews are being recorded.
 This is usually a file permissions issue. The first thing to check is whether the `/wp-content/uploads/pageviews.php` file exists and is writable by your web server.
 
-### How to only use cookies after consent?
-First configure Koko Analytics to not use any cookies by default.
-
-Then configure your cookie consent plugin to add the following code for visitors that have given consent:
-
-`
-<script>
-if (window.koko_analytics) window.koko_analytics.use_cookie = true;
-</script>
-`
-
-### How do I give users access to the dashboard page?
-You can use a plugin like [User Role Editor](https://wordpress.org/plugins/user-role-editor/) to grant the `view_koko_analytics` and `manage_koko_analytics` capabilities to any user rolou can delete the plugin again after adding the capability.
-
 ### What is the definition of a "pageview"?
 A pageview is defined as a view of a page on your site. If a user clicks reload after reaching the page, this is counted as an additional pageview. If a user navigates to a different page and then returns to the original page, a second pageview is recorded as well.
 
 ### What is the definition of a "visitor"?
 A visitor represents the number of sessions during which your website or a specific page was viewed one or more times.
-
-### I only see an empty page when viewing the analytics dashboard.
-Koko Analytics was recently added to EasyPrivacy, a popular filter list which is used in many ad-blockers. It blocks both the tracking script and the dashboard script, but we are working with EasyPrivacy team to get this resolved.
-
-Until then, please ensure to whitelist your own domain in your ad-blocker settings.
 
 ### How can I help fund Koko Analytics?
 You can [purchase Koko Analytics Pro](https://www.kokoanalytics.com/pricing/) to help fund the plugin.
@@ -113,9 +101,31 @@ You can [purchase Koko Analytics Pro](https://www.kokoanalytics.com/pricing/) to
 
 == Changelog ==
 
+#### 1.3.2 - Nov 2, 2023
+
+- Fix chart tooltip immediately disappearing when viewing the dashboard widget on touch devices.
+- Fix fatal error if lacking permissions to read database size from MySQL information tables.
+- Fix double encoding of special characters in post titles.
+- Fix arrow-key or arrow-icon navigation when viewing a single day of data.
+- Automatically refresh dashboard data every 60s.
+- Improve dashboard widget by showing a summary of today.
+- Added filter hook `koko_analytics_dashboard_widget_number_of_top_items` to [modify or disable the top pages and referrers in the dashboard widget](https://github.com/ibericode/koko-analytics/blob/master/code-snippets/modify-dashboard-widget/README.md).
+- The `[koko_analytics_most_viewed_posts]` shortcode now shows a debug message if the arguments did not lead to any results.
+
+
+#### 1.3.1 - Nov 1, 2023
+
+- Fix new visitors not being counted.
+- Fix dashboard issues for users with a large UTC timezone offset.
+- Fix date format in chart component if grouping by month.
+- Revert to blue colors for the chart. If you want your chart to use different colors, please see this [example code snippet on how to change colors](https://github.com/ibericode/koko-analytics/blob/master/code-snippets/change-chart-colors.php).
+- Change dashboard widget to show just a quick summary of today.
+- Show some feedback after using the "create optimized endpoint" button.
+
+
 #### 1.3.0 - Oct 31, 2023
 
-- Major performance improvements for the dashboard by removing the dependency on React and further optimizations.
+- Major [performance improvements for the dashboard](https://www.kokoanalytics.com/2023/10/31/speeding-up-dashboard-removing-react-vanilla-js/) by removing the dependency on React and further optimizations.
 - Added link for loading the dashboard outside of WordPress admin (standalone).
 - Added setting to make the analytics dashboard publicly available.
 - Only show button to create optimized endpoint file if location is writable.

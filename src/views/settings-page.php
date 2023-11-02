@@ -24,6 +24,12 @@ $public_dashboard_url = add_query_arg(array('koko-analytics-dashboard' => 1), ho
             </div>
         <?php } ?>
 
+        <?php if (isset($_GET['endpoint-installed'])) { ?>
+            <div class="notice notice-<?php echo $_GET['endpoint-installed'] ? 'success' : 'warning'; ?> is-dismissible">
+                <p><?php echo $_GET['endpoint-installed'] ? esc_html__('Successfully installed optimized endpoint.') : esc_html__('Unable to install optimized endpoint. Please create the file manually and then try again.', 'koko-analytics'); ?></p>
+            </div>
+        <?php } ?>
+
         <form method="POST" action="<?php echo add_query_arg(array( 'koko_analytics_action' => 'save_settings' )); ?>">
             <?php wp_nonce_field('koko_analytics_save_settings'); ?>
             <div class="ka-margin-m">
@@ -37,7 +43,6 @@ $public_dashboard_url = add_query_arg(array('koko-analytics-dashboard' => 1), ho
                 </select>
                 <p class="description">
                     <?php esc_html_e('Visits and pageviews from users with any of the selected roles will be ignored.', 'koko-analytics'); ?>
-                    <?php echo ' '; ?>
                     <?php esc_html_e('Use CTRL to select multiple options.', 'koko-analytics'); ?>
                 </p>
             </div>
@@ -84,20 +89,18 @@ $public_dashboard_url = add_query_arg(array('koko-analytics-dashboard' => 1), ho
 
         <?php do_action('koko_analytics_show_settings_sections'); ?>
 
-        <?php if (false === is_multisite()) { ?>
+        <?php if ($endpoint_installer->is_eligibile()) { ?>
         <div class="ka-margin-l">
             <h2><?php esc_html_e('Performance', 'koko-analytics'); ?></h2>
             <?php if ($using_custom_endpoint) { ?>
                 <p><?php esc_html_e('The plugin is currently using an optimized tracking endpoint. Great!', 'koko-analytics'); ?></p>
             <?php } else { ?>
                 <p><?php esc_html_e('The plugin is currently not using an optimized tracking endpoint.', 'koko-analytics'); ?></p>
-                <?php if (is_writable($endpoint_installer->get_file_name())) { ?>
                 <form method="POST" action="">
                     <?php wp_nonce_field('koko_analytics_install_optimized_endpoint'); ?>
                     <input type="hidden" name="koko_analytics_action" value="install_optimized_endpoint">
                     <input type="submit" value="<?php esc_attr_e('Create optimized endpoint file', 'koko-analytics'); ?>" class="button button-secondary">
                 </form>
-                <?php } ?>
                 <p><?php printf(__('To use one, create the file %1s with the following file contents: ', 'koko-analytics'), '<code>' . $endpoint_installer->get_file_name() . '</code>'); ?></p>
                 <textarea readonly="readonly" class="widefat" rows="18" onfocus="this.select();" spellcheck="false"><?php echo esc_html($endpoint_installer->get_file_contents()); ?></textarea>
                 <p><?php esc_html_e('Please note that this is entirely optional and only recommended for high-traffic websites.', 'koko-analytics'); ?></p>

@@ -1,8 +1,30 @@
 # Changelog
 
+#### 1.3.2 - Nov 2, 2023
+
+- Fix chart tooltip immediately disappearing when viewing the dashboard widget on touch devices.
+- Fix fatal error if lacking permissions to read database size from MySQL information tables.
+- Fix double encoding of special characters in post titles.
+- Fix arrow-key or arrow-icon navigation when viewing a single day of data.
+- Automatically refresh dashboard data every 60s.
+- Improve dashboard widget by showing a summary of today.
+- Added filter hook `koko_analytics_dashboard_widget_number_of_top_items` to [modify or disable the top pages and referrers in the dashboard widget](https://github.com/ibericode/koko-analytics/blob/master/code-snippets/modify-dashboard-widget/README.md).
+- The `[koko_analytics_most_viewed_posts]` shortcode now shows a debug message if the arguments did not lead to any results.
+
+
+#### 1.3.1 - Nov 1, 2023
+
+- Fix new visitors not being counted.
+- Fix dashboard issues for users with a large UTC timezone offset.
+- Fix date format in chart component if grouping by month.
+- Revert to blue colors for the chart. If you want your chart to use different colors, please see this [example code snippet on how to change colors](https://github.com/ibericode/koko-analytics/blob/master/code-snippets/change-chart-colors.php).
+- Change dashboard widget to show just a quick summary of today.
+- Show some feedback after using the "create optimized endpoint" button.
+
+
 #### 1.3.0 - Oct 31, 2023
 
-- Major performance improvements for the dashboard by removing the dependency on React and further optimizations.
+- Major [performance improvements for the dashboard](https://www.kokoanalytics.com/2023/10/31/speeding-up-dashboard-removing-react-vanilla-js/) by removing the dependency on React and further optimizations.
 - Added link for loading the dashboard outside of WordPress admin (standalone).
 - Added setting to make the analytics dashboard publicly available.
 - Only show button to create optimized endpoint file if location is writable.

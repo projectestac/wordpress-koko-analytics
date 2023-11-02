@@ -26,7 +26,16 @@ class Shortcode_Most_Viewed_Posts
             'post_type' => 'post',
         );
         $args         = shortcode_atts($allowed_args, $args, self::SHORTCODE);
+        if ($args['show_date'] === "false") {
+            $args['show_date'] = false;
+        }
         $posts        = get_most_viewed_posts($args);
+
+        // If shortcode arguments did not return any results
+        // Show a helpful message to editors and up
+        if (count($posts) === 0 && current_user_can('edit_posts')) {
+            return '<p>' . esc_html__('Heads up! Your shortcode is working, but did not return any results. Please check your shortcode arguments.', 'koko-analytics') . '</p>';
+        }
 
         $html = '<ul>';
         foreach ($posts as $p) {

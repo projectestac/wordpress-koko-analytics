@@ -140,8 +140,8 @@ function get_most_viewed_posts(array $args = array()): array
         $args['post_type'] = is_array($args['post_type']) ? $args['post_type'] : explode(',', $args['post_type']);
         $args['post_type'] = array_map('trim', $args['post_type']);
 
-        $start_date = gmdate('Y-m-d', strtotime("-{$args['days']} days"));
-        $end_date   = gmdate('Y-m-d', strtotime('tomorrow midnight'));
+        $start_date = create_local_datetime("-{$args['days']} days")->format('Y-m-d');
+        $end_date = create_local_datetime('tomorrow midnight')->format('Y-m-d');
 
         // build query
         $sql_params             = array(
@@ -250,4 +250,15 @@ function test_custom_endpoint(): void
 {
     $endpoint_installer = new Endpoint_Installer();
     $endpoint_installer->verify();
+}
+
+function create_local_datetime($timestr): \DateTimeImmutable
+{
+    $offset = (float) get_option('gmt_offset', 0.0);
+    if ($offset >= 0) {
+        $offset = "+$offset";
+    }
+
+    $now_local = (new \DateTimeImmutable('now'))->modify($offset . ' hours');
+    return $now_local->modify($timestr);
 }

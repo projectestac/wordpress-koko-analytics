@@ -11,6 +11,7 @@ return array(
     'KokoAnalytics\\Aggregator' => $baseDir . '/src/class-aggregator.php',
     'KokoAnalytics\\Command' => $baseDir . '/src/class-command.php',
     'KokoAnalytics\\Dashboard' => $baseDir . '/src/class-dashboard.php',
+    'KokoAnalytics\\Dashboard_Widget' => $baseDir . '/src/class-dashboard-widget.php',
     'KokoAnalytics\\Dates' => $baseDir . '/src/class-dates.php',
     'KokoAnalytics\\Endpoint_Installer' => $baseDir . '/src/class-endpoint-installer.php',
     'KokoAnalytics\\Migrations' => $baseDir . '/src/class-migrations.php',
