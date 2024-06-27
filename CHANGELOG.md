@@ -1,5 +1,63 @@
 # Changelog
 
+#### 1.3.10 - Jun 20, 2024
+
+- Registration for [Koko Analytics Pro](https://www.kokoanalytics.com/pricing/) is open again. Purchase a license if you need custom event tracking or would just like to support the plugin.
+- Ignore requests from Facebook link previews and requests without a `User-Agent` HTTP header.
+- Update referrer blocklist.
+
+
+#### 1.3.9 - May 31, 2024
+
+- Fix Webpack issue with tracking script.
+
+
+#### 1.3.8 - May 29, 2024
+
+- Add setting to exclude views from IP addresses.
+- Show exact number of pageviews and visitors on hover.
+- Use an optimized custom autoloader.
+- Verify shortcode arguments for `[koko_analytics_counter]` shortcode.
+- Fix error when using SQLite about ambiguous column name.
+- Fix realtime pageview count using wrong duration.
+
+
+#### 1.3.7 - Feb 26, 2024
+
+- Add `[koko_analytics_counter]` shortcode. Thanks Anil Kulkarni!
+- Show time since last aggregation on settings page.
+- Validate data collection request more aggressively before writing to buffer file.
+- Update referrer blocklist.
+
+
+#### 1.3.6 - Jan 29, 2024
+
+- Update referrer blocklist.
+- Update third-party JS dependencies.
+
+
+#### 1.3.5 - Jan 8, 2024
+
+- Fix `HOUR_IN_SECONDS` constant not defined when using AMP with cookie enabled.
+- Fix days without any data not showing up in chart.
+- Improve chart y-axes for numbers just above 100.000.
+
+
+#### 1.3.4 - Nov 21, 2023
+
+- New feature that allows you to filter by page. Clicking any page in the "top pages" list now updates the totals and chart component to only show visitors and pageviews for that specific page.
+- Fix warning that cron event isn't working not showing.
+- Fix error when default date period is stuck at removed period.
+- Fix API url for sites not using pretty permalinks.
+- Performance improvement for rendering chart and tooltips.
+
+
+#### 1.3.3 - Nov 6, 2023
+
+- Fix quick navigation going forward.
+- Add `manifest.json` file so (standalone) dashboard can be installed as a Progressive Web App.
+
+
 #### 1.3.2 - Nov 2, 2023
 
 - Fix chart tooltip immediately disappearing when viewing the dashboard widget on touch devices.
@@ -35,14 +93,6 @@
 
 
 #### 1.2.2 - Oct 18, 2023
-
-First off, we would like to [introduce Koko Analytics Pro](https://www.kokoanalytics.com/2023/10/18/introducing-koko-analytics-pro/) to you.
-
-It is a paid add-on plugin for Koko Analytics containing more complex features, like [custom event tracking](https://www.kokoanalytics.com/kb/tracking-events/).
-Koko Analytics Pro is available for a [yearly price of €59](https://www.kokoanalytics.com/pricing/).
-We hope you will consider becoming a Pro user as this will help us cover support and development costs for Koko Analytics.
-
-Then, for a list of changes in this new version:
 
 - Fix link to settings page from plugins overview page.
 - Fix pagination not working because `wp_localize_script` turns everything into a string.

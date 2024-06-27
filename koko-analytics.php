@@ -3,10 +3,10 @@
 /*
 Plugin Name: Koko Analytics
 Plugin URI: https://www.kokoanalytics.com/#utm_source=wp-plugin&utm_medium=koko-analytics&utm_campaign=plugins-page
-Version: 1.3.2
+Version: 1.3.10
 Description: Privacy-friendly analytics for your WordPress site.
 Author: ibericode
-Author URI: https://ibericode.com/#utm_source=wp-plugin&utm_medium=koko-analytics&utm_campaign=plugins-page
+Author URI: https://www.ibericode.com/
 Author Email: support@kokoanalytics.com
 Text Domain: koko-analytics
 License: GPL-3.0
@@ -14,7 +14,7 @@ License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 
 Koko Analytics - website analytics plugin for WordPress
 
-Copyright (C) 2019 - 2023, Danny van Kooten, hi@dannyvankooten.com
+Copyright (C) 2019 - 2024, Danny van Kooten, hi@dannyvankooten.com
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -34,15 +34,12 @@ phpcs:disable PSR1.Files.SideEffects
 
 namespace KokoAnalytics;
 
-\define('KOKO_ANALYTICS_VERSION', '1.3.2');
+\define('KOKO_ANALYTICS_VERSION', '1.3.10');
 \define('KOKO_ANALYTICS_PLUGIN_FILE', __FILE__);
 \define('KOKO_ANALYTICS_PLUGIN_DIR', __DIR__);
 
-// Conditionally load our autoloader
-// This allows people to install the plugin through wpackagist and use a site-wide autoloader
-if (! class_exists('KokoAnalytics\Plugin')) {
-    require __DIR__ . '/vendor/autoload.php';
-}
+// Load the Koko Analytics autoloader
+require __DIR__ . '/autoload.php';
 
 if (\defined('DOING_AJAX') && DOING_AJAX) {
     maybe_collect_request();
@@ -73,6 +70,9 @@ $rest->init();
 
 $shortcode = new Shortcode_Most_Viewed_Posts();
 $shortcode->init();
+
+$site_counter_shortcode = new ShortCode_Site_Counter();
+$site_counter_shortcode->init();
 
 $pruner = new Pruner();
 $pruner->init();

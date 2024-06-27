@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * @package koko-analytics
+ * @license GPL-3.0+
+ * @author Danny van Kooten
+ */
+
 namespace KokoAnalytics;
 
 class Dates
@@ -62,7 +68,7 @@ class Dates
                     $now->setDate($now->format('Y') - 1, 12, 31),
                 ];
             default:
-                throw new \InvalidArgumentException("Invalid date preset: $key");
+                return $this->get_range('last_28_days');
         }
     }
 }

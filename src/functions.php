@@ -14,40 +14,85 @@ function maybe_collect_request()
 {
     // since we call this function (early) on every AJAX request, detect our specific request here
     // this allows us to short-circuit a bunch of unrelated AJAX stuff and gain a lot of performance
-    if (! isset($_GET['action']) || $_GET['action'] !== 'koko_analytics_collect' || ! defined('DOING_AJAX') || ! DOING_AJAX) {
+    if (!isset($_GET['action']) || $_GET['action'] !== 'koko_analytics_collect' || !defined('DOING_AJAX') || !DOING_AJAX) {
         return;
     }
 
     collect_request();
 }
 
-function collect_request()
+function extract_pageview_data(): array
 {
-    if (! isset($_GET['e'])) {
-        $data = array(
-            'p',                // type indicator
-            (int) $_GET['p'],   // 0: post ID
-            (int) $_GET['nv'],  // 1: is new visitor?
-            (int) $_GET['up'],  // 2: is unique pageview?
-            isset($_GET['r']) ? trim($_GET['r']) : '',   // 3: referrer URL
-        );
-    } else {
-        $data = array(
-            'e',            // type indicator
-            trim($_GET['e']),     // 0: event name
-            trim($_GET['p']),     // 1: event parameter
-            (int) $_GET['u'],     // 2: is unique?
-            (int) $_GET['v'],     // 3: event value
-        );
+    // do nothing if a required parameter is missing
+    if (
+        !isset($_GET['p'])
+        || !isset($_GET['nv'])
+        || !isset($_GET['up'])
+    ) {
+        return array();
     }
 
-    $success = isset($_GET['test']) ? test_collect_in_file() : collect_in_file($data);
+    // do nothing if parameters are not of the correct type
+    if (
+        false === filter_var($_GET['p'], FILTER_VALIDATE_INT)
+        || false === filter_var($_GET['nv'], FILTER_VALIDATE_INT)
+        || false === filter_var($_GET['up'], FILTER_VALIDATE_INT)
+    ) {
+        return array();
+    }
 
-    // set OK headers & prevent caching
-    if (! $success) {
-        \header($_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error');
+    return array(
+        'p',                // type indicator
+        $_GET['p'],   // 0: post ID
+        $_GET['nv'],  // 1: is new visitor?
+        $_GET['up'],  // 2: is unique pageview?
+        isset($_GET['r']) ? trim($_GET['r']) : '',   // 3: referrer URL
+    );
+}
+
+function extract_event_data(): array
+{
+    if (!isset($_GET['e']) || !isset($_GET['p']) || !isset($_GET['u']) || !isset($_GET['v'])) {
+        return array();
+    }
+
+    if (false === filter_var($_GET['u'], FILTER_VALIDATE_INT) || false === filter_var($_GET['v'], FILTER_VALIDATE_INT)) {
+        return array();
+    }
+
+    return array(
+        'e',                  // type indicator
+        trim($_GET['e']),     // 0: event name
+        trim($_GET['p']),     // 1: event parameter
+        (int) $_GET['u'],     // 2: is unique?
+        (int) $_GET['v'],     // 3: event value
+    );
+}
+
+function collect_request()
+{
+    // ignore requests from bots, crawlers and link previews
+    if (empty($_SERVER['HTTP_USER_AGENT']) || preg_match("/bot|crawl|spider|seo|lighthouse|facebookexternalhit|preview/i", $_SERVER['HTTP_USER_AGENT'])) {
+        return;
+    }
+
+    if (isset($_GET['e'])) {
+        $data = extract_event_data();
     } else {
-        \header($_SERVER['SERVER_PROTOCOL'] . ' 200 OK');
+        $data = extract_pageview_data();
+    }
+
+    if (!empty($data)) {
+        $success = isset($_GET['test']) ? test_collect_in_file() : collect_in_file($data);
+
+        // set OK headers & prevent caching
+        if (!$success) {
+            \header($_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error');
+        } else {
+            \header($_SERVER['SERVER_PROTOCOL'] . ' 200 OK');
+        }
+    } else {
+        \header($_SERVER['SERVER_PROTOCOL'] . ' 400 Bad Request');
     }
 
     \header('Content-Type: text/plain');
@@ -59,13 +104,13 @@ function collect_request()
     \header('Tk: N');
 
     // set cookie server-side if requested (eg for AMP requests)
-    if (isset($_GET['p']) && isset($_GET['sc']) && (int) $_GET['sc'] === 1) {
-        $posts_viewed = isset($_COOKIE['_koko_analytics_pages_viewed']) ? \explode(',', $_COOKIE['_koko_analytics_pages_viewed']) : array( '' );
+    if (isset($_GET['p']) && isset($_GET['nv']) && isset($_GET['sc']) && (int) $_GET['sc'] === 1) {
+        $posts_viewed = isset($_COOKIE['_koko_analytics_pages_viewed']) ? \explode(',', $_COOKIE['_koko_analytics_pages_viewed']) : array('');
         if ((int) $_GET['nv']) {
             $posts_viewed[] = (int) $_GET['p'];
         }
         $cookie = \join(',', $posts_viewed);
-        \setcookie('_koko_analytics_pages_viewed', $cookie, time() + 6 * HOUR_IN_SECONDS, '/');
+        \setcookie('_koko_analytics_pages_viewed', $cookie, time() + 6 * 3600, '/');
     }
 
     exit;
@@ -86,7 +131,7 @@ function collect_in_file(array $data): bool
     $filename = get_buffer_filename();
 
     // if file does not yet exist, add PHP header to prevent direct file access
-    if (! \is_file($filename)) {
+    if (!\is_file($filename)) {
         $content = '<?php exit; ?>' . PHP_EOL;
     } else {
         $content = '';
@@ -114,6 +159,7 @@ function get_settings(): array
     $default_settings = array(
         'use_cookie' => 1,
         'exclude_user_roles' => array(),
+        'exclude_ip_addresses' => array(),
         'prune_data_after_months' => 5 * 12, // 5 years
         'default_view' => 'last_28_days',
         'is_dashboard_public' => 0,
@@ -136,11 +182,12 @@ function get_most_viewed_posts(array $args = array()): array
             'days'    => 30,
         ), $args);
 
-        $args['days']      = (int) $args['days'];
+        $args['days']      = abs((int) $args['days']);
         $args['post_type'] = is_array($args['post_type']) ? $args['post_type'] : explode(',', $args['post_type']);
         $args['post_type'] = array_map('trim', $args['post_type']);
 
-        $start_date = create_local_datetime("-{$args['days']} days")->format('Y-m-d');
+        $start_date_str = $args['days'] === 0 ? 'today midnight' : "-{$args['days']} days";
+        $start_date = create_local_datetime($start_date_str)->format('Y-m-d');
         $end_date = create_local_datetime('tomorrow midnight')->format('Y-m-d');
 
         // build query
@@ -191,7 +238,7 @@ function admin_bar_menu($wp_admin_bar)
     }
 
     // only show for users who can access statistics page
-    if (! current_user_can('view_koko_analytics')) {
+    if (!current_user_can('view_koko_analytics')) {
         return;
     }
 
@@ -211,9 +258,18 @@ function widgets_init()
     register_widget('KokoAnalytics\Widget_Most_Viewed_Posts');
 }
 
-function get_realtime_pageview_count($since = null): int
+/**
+ * @param int|string $since Either an integer timestamp (in seconds since Unix epoch) or a relative time string that strtotime understands.
+ * @return int
+ */
+function get_realtime_pageview_count($since = '-5 minutes'): int
 {
-    $since  = $since !== null ? $since : strtotime('-5 minutes');
+    if (is_numeric($since)) {
+        $since = (int) $since;
+    } else {
+        // $since is relative time string
+        $since = strtotime($since);
+    }
     $counts = (array) get_option('koko_analytics_realtime_pageview_count', array());
     $sum    = 0;
     foreach ($counts as $timestamp => $pageviews) {
@@ -235,12 +291,12 @@ function using_custom_endpoint(): bool
 
 function fmt_large_number(float $number): string
 {
-    if ($number < 10000) {
+    if ($number < 10000.0) {
         return $number;
     }
 
-    $number /= 1000;
-    if ($number > 100) {
+    $number /= 1000.0;
+    if ($number > 100.0) {
         $number = round($number);
     }
     return rtrim(rtrim(number_format($number, 1), '0'), '.')  . 'K';
@@ -255,10 +311,14 @@ function test_custom_endpoint(): void
 function create_local_datetime($timestr): \DateTimeImmutable
 {
     $offset = (float) get_option('gmt_offset', 0.0);
-    if ($offset >= 0) {
+    if ($offset >= 0.00) {
         $offset = "+$offset";
     }
 
-    $now_local = (new \DateTimeImmutable('now'))->modify($offset . ' hours');
+    $now_local = (new \DateTimeImmutable('now'));
+    if ($offset > 0.00 || $offset < 0.00) {
+        $now_local = $now_local->modify($offset . ' hours');
+    }
+
     return $now_local->modify($timestr);
 }

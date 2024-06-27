@@ -30,7 +30,7 @@ $public_dashboard_url = add_query_arg(array('koko-analytics-dashboard' => 1), ho
             </div>
         <?php } ?>
 
-        <form method="POST" action="<?php echo add_query_arg(array( 'koko_analytics_action' => 'save_settings' )); ?>">
+        <form method="POST" action="<?php echo add_query_arg(array('koko_analytics_action' => 'save_settings')); ?>">
             <?php wp_nonce_field('koko_analytics_save_settings'); ?>
             <div class="ka-margin-m">
                 <label for="ka-exclude-user-roles" class="ka-settings--label"><?php esc_html_e('Exclude pageviews from these user roles', 'koko-analytics'); ?></label>
@@ -42,10 +42,27 @@ $public_dashboard_url = add_query_arg(array('koko-analytics-dashboard' => 1), ho
                     ?>
                 </select>
                 <p class="description">
-                    <?php esc_html_e('Visits and pageviews from users with any of the selected roles will be ignored.', 'koko-analytics'); ?>
+                    <?php esc_html_e('Visits and pageviews from any of the selected user roles will be ignored.', 'koko-analytics'); ?>
                     <?php esc_html_e('Use CTRL to select multiple options.', 'koko-analytics'); ?>
                 </p>
             </div>
+
+            <div class="ka-margin-m">
+                <label for="ka-exclude-ip-addresses" class="ka-settings--label"><?php esc_html_e('Exclude pageviews from these IP addresses', 'koko-analytics'); ?></label>
+                <?php
+                echo '<textarea id="ka-exclude-ip-addresses" name="koko_analytics_settings[exclude_ip_addresses]" class="widefat" rows="6">';
+                echo join(PHP_EOL, $settings['exclude_ip_addresses']);
+                echo '</textarea>';
+                ?>
+                <p class="description">
+                    <?php esc_html_e('Visits and pageviews from any of these IP addresses will be ignored.', 'koko-analytics'); ?>
+                    <?php echo ' '; ?>
+                    <?php esc_html_e('Enter each IP address on its own line.', 'koko-analytics'); ?>
+                    <?php echo ' '; ?>
+                    <?php printf(esc_html__('Your current IP address is %s.', 'koko-analytics'), '<code>' . $_SERVER['REMOTE_ADDR'] . '</code>'); ?>
+                </p>
+            </div>
+
             <div class="ka-margin-m">
                 <fieldset>
                     <legend class="ka-settings--label"><?php esc_html_e('Use cookie to determine unique visitors and pageviews?', 'koko-analytics'); ?></legend>
@@ -90,27 +107,34 @@ $public_dashboard_url = add_query_arg(array('koko-analytics-dashboard' => 1), ho
         <?php do_action('koko_analytics_show_settings_sections'); ?>
 
         <?php if ($endpoint_installer->is_eligibile()) { ?>
-        <div class="ka-margin-l">
-            <h2><?php esc_html_e('Performance', 'koko-analytics'); ?></h2>
-            <?php if ($using_custom_endpoint) { ?>
-                <p><?php esc_html_e('The plugin is currently using an optimized tracking endpoint. Great!', 'koko-analytics'); ?></p>
-            <?php } else { ?>
-                <p><?php esc_html_e('The plugin is currently not using an optimized tracking endpoint.', 'koko-analytics'); ?></p>
-                <form method="POST" action="">
-                    <?php wp_nonce_field('koko_analytics_install_optimized_endpoint'); ?>
-                    <input type="hidden" name="koko_analytics_action" value="install_optimized_endpoint">
-                    <input type="submit" value="<?php esc_attr_e('Create optimized endpoint file', 'koko-analytics'); ?>" class="button button-secondary">
-                </form>
-                <p><?php printf(__('To use one, create the file %1s with the following file contents: ', 'koko-analytics'), '<code>' . $endpoint_installer->get_file_name() . '</code>'); ?></p>
-                <textarea readonly="readonly" class="widefat" rows="18" onfocus="this.select();" spellcheck="false"><?php echo esc_html($endpoint_installer->get_file_contents()); ?></textarea>
-                <p><?php esc_html_e('Please note that this is entirely optional and only recommended for high-traffic websites.', 'koko-analytics'); ?></p>
-            <?php } ?>
-        </div>
+            <div class="ka-margin-l">
+                <h2><?php esc_html_e('Performance', 'koko-analytics'); ?></h2>
+                <?php if ($using_custom_endpoint) { ?>
+                    <p><?php esc_html_e('The plugin is currently using an optimized tracking endpoint. Great!', 'koko-analytics'); ?></p>
+                <?php } else { ?>
+                    <p><?php esc_html_e('The plugin is currently not using an optimized tracking endpoint.', 'koko-analytics'); ?></p>
+                    <form method="POST" action="">
+                        <?php wp_nonce_field('koko_analytics_install_optimized_endpoint'); ?>
+                        <input type="hidden" name="koko_analytics_action" value="install_optimized_endpoint">
+                        <input type="submit" value="<?php esc_attr_e('Create optimized endpoint file', 'koko-analytics'); ?>" class="button button-secondary">
+                    </form>
+                    <p><?php printf(__('To use one, create the file %1s with the following file contents: ', 'koko-analytics'), '<code>' . $endpoint_installer->get_file_name() . '</code>'); ?></p>
+                    <textarea readonly="readonly" class="widefat" rows="18" onfocus="this.select();" spellcheck="false"><?php echo esc_html($endpoint_installer->get_file_contents()); ?></textarea>
+                    <p><?php esc_html_e('Please note that this is entirely optional and only recommended for high-traffic websites.', 'koko-analytics'); ?></p>
+                <?php } ?>
+            </div>
         <?php } ?>
 
         <div class="ka-margin-l">
             <h2><?php esc_html_e('Data', 'koko-analytics'); ?></h2>
             <p><?php esc_html_e('Database size:', 'koko-analytics'); ?> <?php echo esc_html($database_size); ?> MB</p>
+            <p>
+                <?php $seconds_since_last_aggregation = (time() - (int) get_option('koko_analytics_last_aggregation_at', 0)); ?>
+                <?php esc_html_e('Last aggregation:', 'koko-analytics'); ?>
+                <span style="<?php echo $seconds_since_last_aggregation > 300 ? 'color: red;' : ''; ?>">
+                    <?php printf(__('%d seconds ago', 'koko-analytics'), $seconds_since_last_aggregation); ?>
+                </span>
+            </p>
             <div class="ka-margin-m">
                 <p><?php esc_html_e('Use the button below to erase all of your current analytics data. You may have to clear your browser\'s cache afterwards for the effect to be evident.', 'koko-analytics'); ?></p>
                 <form method="POST" action="" onsubmit="return confirm('<?php esc_attr_e('Are you sure you want to reset all of your statistics? This can not be undone.', 'koko-analytics'); ?>')">
@@ -129,9 +153,8 @@ $public_dashboard_url = add_query_arg(array('koko-analytics-dashboard' => 1), ho
         <?php if (! defined('KOKO_ANALYTICS_PRO_VERSION')) { ?>
         <div class="ka-margin-l">
             <h2>Koko Analytics Pro</h2>
-            <p>We created Koko Analytics Pro to add some more advanced analytics features to Koko Analytics, like custom event tracking and periodic email reports.</p>
-            <p>Please consider <a href="https://www.kokoanalytics.com/pricing/">purchasing Koko Analytics Pro</a> even if you're not currently in need of the additional features it provides.
-                It helps us fund development and support costs for the free (and open-source) plugin as well.</p>
+            <p>We developed Koko Analytics Pro to add certain advanced features to Koko Analytics, like custom event tracking and periodic email reports.</p>
+            <p><a href="https://www.kokoanalytics.com/pricing/">Purchase a Koko Analytics Pro license</a> to help us continue developing and supporting Koko Analytics.</p>
         </div>
         <?php } ?>
 

@@ -1,22 +1,28 @@
 <?php
 
+/**
+ * @package koko-analytics
+ * @license GPL-3.0+
+ * @author Danny van Kooten
+ */
+
 namespace KokoAnalytics;
 
 class Dashboard
 {
     public function add_hooks()
     {
-        add_action('init', array( $this, 'maybe_show_dashboard' ), 10, 0);
+        add_action('init', array($this, 'maybe_show_dashboard'), 10, 0);
     }
 
     public function maybe_show_dashboard(): void
     {
-        if (! isset($_GET['koko-analytics-dashboard'])) {
+        if (!isset($_GET['koko-analytics-dashboard'])) {
             return;
         }
 
         $settings = get_settings();
-        if (!$settings['is_dashboard_public'] && ! current_user_can('view_koko_analytics')) {
+        if (!$settings['is_dashboard_public'] && !current_user_can('view_koko_analytics')) {
             return;
         }
 
@@ -38,7 +44,7 @@ class Dashboard
         $dateStart  = isset($_GET['start_date']) ? create_local_datetime($_GET['start_date']) : $dateRange[0];
         $dateEnd    = isset($_GET['end_date']) ? create_local_datetime($_GET['end_date']) : $dateRange[1];
         $dateFormat = get_option('date_format');
-        $preset     = ! isset($_GET['start_date']) && ! isset($_GET['end_date']) ? $settings['default_view'] : 'custom';
+        $preset     = !isset($_GET['start_date']) && !isset($_GET['end_date']) ? $settings['default_view'] : 'custom';
         $totals = $stats->get_totals($dateStart->format('Y-m-d'), $dateEnd->format('Y-m-d'));
         $realtime = get_realtime_pageview_count('-1 hour');
 
@@ -95,7 +101,7 @@ class Dashboard
             esc_html__('Tip: use the arrow keys on your keyboard to cycle through date ranges.', 'koko-analytics'),
             esc_html__('Tip: you can set a default date range in the plugin settings.', 'koko-analytics'),
             sprintf(__('Tip: did you know there is a widget, shortcode and template function to <a href="%1s">show a list of the most viewed posts</a> on your site?', 'koko-analytics'), 'https://www.kokoanalytics.com/kb/showing-most-viewed-posts-on-your-wordpress-site/'),
-            sprintf(__('Tip: Use <a href="%1s">Koko Analytics Pro</a> to set up custom event tracking.', 'koko-analytics'), 'https://www.kokoanalytics.com/pricing/')
+            sprintf(__('Tip: Use <a href="%1s">Koko Analytics Pro</a> to set up custom event tracking.', 'koko-analytics'), 'https://www.kokoanalytics.com/pricing/'),
         ];
         return $tips[array_rand($tips)];
     }
@@ -104,12 +110,11 @@ class Dashboard
     {
         ?>
         <div class="notice notice-warning is-dismissible" id="koko-analytics-adblock-notice" style="display: none;">
-        <p>
-            <?php echo esc_html__('You appear to be using an ad-blocker that has Koko Analytics on its blocklist. Please whitelist this domain in your ad-blocker setting if your dashboard does not seem to be working correctly.', 'koko-analytics'); ?>
-        </p>
+            <p>
+                <?php echo esc_html__('You appear to be using an ad-blocker that has Koko Analytics on its blocklist. Please whitelist this domain in your ad-blocker setting if your dashboard does not seem to be working correctly.', 'koko-analytics'); ?>
+            </p>
         </div>
-        <script src="<?php echo plugins_url('/assets/dist/js/koko-analytics-script-test.js', KOKO_ANALYTICS_PLUGIN_FILE); ?>?v=<?php echo KOKO_ANALYTICS_VERSION; ?>"
-            defer onerror="document.getElementById('koko-analytics-adblock-notice').style.display = '';"></script>
+        <script src="<?php echo plugins_url('/assets/dist/js/koko-analytics-script-test.js', KOKO_ANALYTICS_PLUGIN_FILE); ?>?v=<?php echo KOKO_ANALYTICS_VERSION; ?>" defer onerror="document.getElementById('koko-analytics-adblock-notice').style.display = '';"></script>
         <?php
     }
 }

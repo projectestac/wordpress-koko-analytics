@@ -47,8 +47,8 @@ h1.ka-logo,
   visibility: visible;
 }
 .ka-admin-nav {
-  float: right;
   line-height: 34px;
+  margin-left: auto;
 }
 .ka-admin-container {
   max-width: 620px;
@@ -96,6 +96,7 @@ h1.ka-logo,
   position: relative;
   overflow: visible;
   min-height: 244px;
+  padding: 24px;
 }
 .ka-chart--tooltip {
   position: absolute;
@@ -154,11 +155,37 @@ h1.ka-logo,
   grid-template-columns: repeat(6, 1fr);
 }
 
+/** Page filter */
+.ka-page-filter {
+  border: 1px solid #DDD;
+  padding: 6px;
+  background: hsl(205.2, 100%, 93.9%);
+  border-radius: 6px;
+  display: none;
+}
+.ka-page-filter--close {
+  text-decoration: none;
+  font-weight: normal;
+  margin-left: 2px;
+  color: #666;
+  padding: 4px;
+  cursor: pointer;
+  opacity: 0.5;
+}
+.ka-page-filter--close:hover,
+.ka-page-filter--close:focus {
+  opacity: 1;
+}
+.page-filter-active .ka-dashboard-components {
+  opacity: 0.4;
+}
+
 /** Topx components */
 .ka-topx {
   grid-column: span 6;
-
 }
+
+
 @media (min-width: 840px) {
   .ka-topx {
     grid-column: span 3;

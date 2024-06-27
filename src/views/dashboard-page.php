@@ -20,52 +20,61 @@ use function KokoAnalytics\fmt_large_number;
 <link rel="stylesheet" href="<?php echo plugins_url('assets/dist/css/dashboard.css', KOKO_ANALYTICS_PLUGIN_FILE); ?>?v=<?php echo KOKO_ANALYTICS_VERSION; ?>">
 <div class="wrap">
     <?php $this->maybe_show_adblocker_notice(); ?>
-    <?php require __DIR__ . '/nav.php'; ?>
 
-    <div class="ka-datepicker">
-        <div class='ka-datepicker--label' aria-expanded="false" aria-controls="ka-datepicker-dropdown">
-            <?php echo $dateStart->format($dateFormat); ?> — <?php echo $dateEnd->format($dateFormat); ?>
-        </div>
-        <div id="ka-datepicker-dropdown" class="ka-datepicker--dropdown" style="display: none;">
-            <div class="ka-datepicker--quicknav">
-                <span class="ka-datepicker--quicknav-prev" title=<?php echo esc_html__('Previous', 'koko-analytics'); ?>></span>
-                <span class="ka-datepicker--quicknav-heading"><?php echo $dateStart->format($dateFormat); ?> — <?php echo $dateEnd->format($dateFormat); ?></span>
-                <span class="ka-datepicker--quicknav-next" title=<?php echo esc_html__('Next', 'koko-analytics'); ?>></span>
+    <div style="display: flex; gap: 12px; ">
+        <div class="ka-datepicker">
+            <div class='ka-datepicker--label' aria-expanded="false" aria-controls="ka-datepicker-dropdown">
+                <?php echo $dateStart->format($dateFormat); ?> — <?php echo $dateEnd->format($dateFormat); ?>
             </div>
-            <div class="ka-datepicker--dropdown-content">
-                <label for="ka-date-presets"><?php echo esc_html__('Date range', 'koko-analytics'); ?></label>
-                <select id="ka-date-presets">
-                    <option value="custom" <?php echo $preset === 'custom' ? 'selected' : ''; ?> disabled><?php echo esc_html__('Custom', 'koko-analytics'); ?></option>
-                    <?php foreach ($this->get_date_presets() as $key => $label) {
-                        $range = $dates->get_range($key); ?>
-                        <option value="<?php echo $key; ?>"
-                                data-start-date="<?php echo $range[0]->format('Y-m-d'); ?>"
-                                data-end-date="<?php echo $range[1]->format('Y-m-d'); ?>"
-                                <?php echo ( $key === $preset ) ? ' selected' : ''; ?>><?php echo esc_html($label); ?></option>
-                    <?php } ?>
-                </select>
-                <div style="display: flex; margin-top: 12px;">
-                    <div>
-                        <label for='ka-date-start'><?php echo esc_html__('Start date', 'koko-analytics'); ?></label>
-                        <input id='ka-date-start' type="date" size="10" placeholder="YYYY-MM-DD" min="2000-01-01" max="2100-01-01"
-                               value="<?php echo $dateStart->format('Y-m-d'); ?>">
-                        <span>&nbsp;&mdash;&nbsp;</span>
-                    </div>
-                    <div>
-                        <label for='ka-date-end'><?php echo esc_html__('End date', 'koko-analytics'); ?></label>
-                        <input id='ka-date-end' type="date" size="10" placeholder="YYYY-MM-DD" min="2000-01-01" max="2100-01-01"
-                               value="<?php echo $dateEnd->format('Y-m-d'); ?>">
+            <div id="ka-datepicker-dropdown" class="ka-datepicker--dropdown" style="display: none;">
+                <div class="ka-datepicker--quicknav">
+                    <span class="ka-datepicker--quicknav-prev" title=<?php echo esc_html__('Previous', 'koko-analytics'); ?>></span>
+                    <span class="ka-datepicker--quicknav-heading"><?php echo $dateStart->format($dateFormat); ?> — <?php echo $dateEnd->format($dateFormat); ?></span>
+                    <span class="ka-datepicker--quicknav-next" title=<?php echo esc_html__('Next', 'koko-analytics'); ?>></span>
+                </div>
+                <div class="ka-datepicker--dropdown-content">
+                    <label for="ka-date-presets"><?php echo esc_html__('Date range', 'koko-analytics'); ?></label>
+                    <select id="ka-date-presets">
+                        <option value="custom" <?php echo $preset === 'custom' ? 'selected' : ''; ?> disabled><?php echo esc_html__('Custom', 'koko-analytics'); ?></option>
+                        <?php foreach ($this->get_date_presets() as $key => $label) {
+                            $range = $dates->get_range($key); ?>
+                            <option value="<?php echo $key; ?>"
+                                    data-start-date="<?php echo $range[0]->format('Y-m-d'); ?>"
+                                    data-end-date="<?php echo $range[1]->format('Y-m-d'); ?>"
+                                    <?php echo ( $key === $preset ) ? ' selected' : ''; ?>><?php echo esc_html($label); ?></option>
+                        <?php } ?>
+                    </select>
+                    <div style="display: flex; margin-top: 12px;">
+                        <div>
+                            <label for='ka-date-start'><?php echo esc_html__('Start date', 'koko-analytics'); ?></label>
+                            <input id='ka-date-start' type="date" size="10" placeholder="YYYY-MM-DD" min="2000-01-01" max="2100-01-01"
+                                   value="<?php echo $dateStart->format('Y-m-d'); ?>">
+                            <span>&nbsp;&mdash;&nbsp;</span>
+                        </div>
+                        <div>
+                            <label for='ka-date-end'><?php echo esc_html__('End date', 'koko-analytics'); ?></label>
+                            <input id='ka-date-end' type="date" size="10" placeholder="YYYY-MM-DD" min="2000-01-01" max="2100-01-01"
+                                   value="<?php echo $dateEnd->format('Y-m-d'); ?>">
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <div class="ka-page-filter">
+            <span><?php esc_html_e('Page', 'koko-analytics'); ?> = </span>
+            <span style="font-weight: bold;"></span>
+            <span class="ka-page-filter--close" aria-label="clear filter" title="<?php esc_attr_e('Clear filter', 'koko-analytics'); ?>">✕</span>
+        </div>
+
+        <?php require __DIR__ . '/nav.php'; ?>
     </div>
 
     <div id="ka-totals" class='ka-totals m'>
         <div class="ka-fade <?php echo $totals->visitors_change > 0 ? 'ka-up' : ''; ?> <?php echo $totals->visitors_change < 0 ? 'ka-down' : ''; ?>">
             <div class='ka-totals--heading'><?php echo esc_html__('Total visitors', 'koko-analytics'); ?></div>
             <div class='ka-totals--amount'>
-                <span><?php echo fmt_large_number($totals->visitors); ?></span>
+                <span title="<?php echo esc_attr($totals->visitors); ?>"><?php echo fmt_large_number($totals->visitors); ?></span>
                 <span class="ka-totals--change">
                     <?php echo $totals->visitors_change_rel !== null ? sprintf('%+.0f%%', $totals->visitors_change_rel * 100) : ''; ?>
                 </span>
@@ -79,7 +88,7 @@ use function KokoAnalytics\fmt_large_number;
         <div class="ka-fade <?php echo $totals->pageviews_change > 0 ? 'ka-up' : ''; ?> <?php echo $totals->pageviews_change < 0 ? 'ka-down' : ''; ?>">
             <div class='ka-totals--heading'><?php echo esc_html__('Total pageviews', 'koko-analytics'); ?></div>
             <div class='ka-totals--amount'>
-                <span><?php echo fmt_large_number($totals->pageviews); ?></span>
+                <span title="<?php echo esc_attr($totals->pageviews); ?>"><?php echo fmt_large_number($totals->pageviews); ?></span>
                 <span class="ka-totals--change">
                     <?php echo $totals->pageviews_change_rel !== null ? sprintf('%+.0f%%', $totals->pageviews_change_rel * 100) : ''; ?>
                 </span>
