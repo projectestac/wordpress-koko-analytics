@@ -73,7 +73,16 @@ class Admin
         // detect issues with WP Cron event not running
         // it should run every minute, so if it didn't run in 10 minutes there is most likely something wrong
         $next_scheduled = wp_next_scheduled('koko_analytics_aggregate_stats');
+
+        // XTEC ************ MODIFICAT - Avoid false positives. By default, cron is scheduled to run every 15 minutes.
+        // 2024.10.01 @aginard
+        return $next_scheduled !== false;
+        //************ ORIGINAL
+        /*
         return $next_scheduled !== false && $next_scheduled > (time() - 10 * 60);
+        */
+        //************ FI
+
     }
 
     public function show_page(): void
