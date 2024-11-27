@@ -10,9 +10,9 @@ namespace KokoAnalytics;
 
 class Dashboard
 {
-    public function add_hooks()
+    public function __construct()
     {
-        add_action('init', array($this, 'maybe_show_dashboard'), 10, 0);
+        add_action('wp', array($this, 'maybe_show_dashboard'), 10, 0);
     }
 
     public function maybe_show_dashboard(): void
@@ -40,43 +40,62 @@ class Dashboard
         $settings   = get_settings();
         $dates = new Dates();
         $stats = new Stats();
-        $dateRange = $dates->get_range($settings['default_view']);
-        $dateStart  = isset($_GET['start_date']) ? create_local_datetime($_GET['start_date']) : $dateRange[0];
-        $dateEnd    = isset($_GET['end_date']) ? create_local_datetime($_GET['end_date']) : $dateRange[1];
+        $items_per_page = (int) apply_filters('koko_analytics_items_per_page', 20);
         $dateFormat = get_option('date_format');
-        $preset     = !isset($_GET['start_date']) && !isset($_GET['end_date']) ? $settings['default_view'] : 'custom';
-        $totals = $stats->get_totals($dateStart->format('Y-m-d'), $dateEnd->format('Y-m-d'));
+        $dashboard_url = remove_query_arg(['start_date', 'end_date', 'view', 'posts', 'referrers']);
+
+        // parse query params
+        $range = isset($_GET['view']) ? $_GET['view'] : $settings['default_view'];
+        $dateRange = $dates->get_range($range);
+
+        $page = isset($_GET['p']) ? absint($_GET['p']) : 0;
+        $dateStart  = isset($_GET['start_date']) ? create_local_datetime($_GET['start_date']) : $dateRange[0];
+        $dateStart = $dateStart ?? $dateRange[0];
+        $dateEnd    = isset($_GET['end_date']) ? create_local_datetime($_GET['end_date']) : $dateRange[1];
+        $dateEnd = $dateEnd ?? $dateRange[1];
+        $nextDates = $this->get_next_period($dateStart, $dateEnd, 1);
+        $prevDates = $this->get_next_period($dateStart, $dateEnd, -1);
+
+        $posts_offset = isset($_GET['posts']['offset']) ? absint($_GET['posts']['offset']) : 0;
+        $referrers_offset = isset($_GET['referrers']['offset']) ? absint($_GET['referrers']['offset']) : 0;
+        $posts_limit = isset($_GET['posts']['limit']) ? absint($_GET['posts']['limit']) : $items_per_page;
+        $referrers_limit = isset($_GET['referrers']['limit']) ? absint($_GET['referrers']['limit']) : $items_per_page;
+
+        $totals = $stats->get_totals($dateStart->format('Y-m-d'), $dateEnd->format('Y-m-d'), $page);
+        $totals_previous = $stats->get_totals($prevDates[0]->format('Y-m-d'), $prevDates[1]->format('Y-m-d'), $page);
+
+        $posts = $stats->get_posts($dateStart->format("Y-m-d"), $dateEnd->format('Y-m-d'), $posts_offset, $posts_limit);
+        $posts_count = $stats->count_posts($dateStart->format('Y-m-d'), $dateEnd->format('Y-m-d'));
+        $referrers = $stats->get_referrers($dateStart->format("Y-m-d"), $dateEnd->format('Y-m-d'), $referrers_offset, $referrers_limit);
+        $referrers_count = $stats->count_referrers($dateStart->format("Y-m-d"), $dateEnd->format('Y-m-d'));
         $realtime = get_realtime_pageview_count('-1 hour');
+
+        $groupChartBy = $dateEnd->getTimestamp() - $dateStart->getTimestamp() >= 86400 * 36 ? 'month' : 'day';
+        $chart_data =  $stats->get_stats($dateStart->format("Y-m-d"), $dateEnd->format('Y-m-d'), $groupChartBy, $page);
+
+        $nextDates = $this->get_next_period($dateStart, $dateEnd, 1);
+        $prevDates = $this->get_next_period($dateStart, $dateEnd, -1);
 
         require __DIR__ . '/views/dashboard-page.php';
     }
 
-    private function get_script_data(\DateTimeInterface $dateStart, \DateTimeInterface $dateEnd): array
+    private function get_next_period(\DateTimeImmutable $dateStart, \DateTimeImmutable $dateEnd, $dir = 1): array
     {
-        $stats = new Stats();
-        $items_per_page = (int) apply_filters('koko_analytics_items_per_page', 20);
-        $groupChartBy = 'day';
+        $modifier = $dir > 0 ? "+" : "-";
 
-        if ($dateEnd->getTimestamp() - $dateStart->getTimestamp() >= 86400 * 364) {
-            $groupChartBy = 'month';
+        if ($dateStart->format('d') === "01" && $dateEnd->format('d') === $dateEnd->format('t')) {
+            // cycling full months
+            $diffInMonths = 1 + ($dateEnd->format('Y') - $dateStart->format('Y')) * 12 + $dateEnd->format('m') - $dateStart->format('m');
+            $periodStart = $dateStart->setDate($dateStart->format('Y'), $dateStart->format('m') + ($dir * $diffInMonths), 1);
+            $periodEnd = $dateEnd->setDate($dateStart->format('Y'), $dateEnd->format('m') + ($dir * $diffInMonths), 5);
+            $periodEnd = $periodEnd->setDate((int) $periodEnd->format('Y'), (int) $periodEnd->format('m'), (int) $periodEnd->format('t'));
+        } else {
+            $diffInDays = 1 + ($dateEnd->format('Y') - $dateStart->format('Y')) * 365 + ($dateEnd->format('z') - $dateStart->format('z')) ;
+            $periodStart = $dateStart->modify("{$modifier}{$diffInDays} days");
+            $periodEnd = $dateEnd->modify("{$modifier}{$diffInDays} days");
         }
 
-        return apply_filters('koko_analytics_dashboard_script_data', array(
-            'root'             => rest_url(),
-            'nonce'            => wp_create_nonce('wp_rest'),
-            'items_per_page'   => $items_per_page,
-            'startDate' => $_GET['start_date'] ?? $dateStart->format('Y-m-d'),
-            'endDate' => $_GET['end_date'] ?? $dateEnd->format('Y-m-d'),
-            'i18n' => array(
-                'Visitors' => __('Visitors', 'koko-analytics'),
-                'Pageviews' => __('Pageviews', 'koko-analytics'),
-            ),
-            'data' => array(
-                'chart' => $stats->get_stats($dateStart->format("Y-m-d"), $dateEnd->format('Y-m-d'), $groupChartBy),
-                'posts' => $stats->get_posts($dateStart->format("Y-m-d"), $dateEnd->format('Y-m-d'), 0, $items_per_page),
-                'referrers' => $stats->get_referrers($dateStart->format("Y-m-d"), $dateEnd->format('Y-m-d'), 0, $items_per_page),
-            )
-        ), $dateStart, $dateEnd);
+        return [ $periodStart, $periodEnd ];
     }
 
     public function get_date_presets(): array
@@ -93,17 +112,6 @@ class Dashboard
             'this_year' => __('This year', 'koko-analytics'),
             'last_year' => __('Last year', 'koko-analytics'),
         ];
-    }
-
-    private function get_usage_tip(): string
-    {
-        $tips = [
-            esc_html__('Tip: use the arrow keys on your keyboard to cycle through date ranges.', 'koko-analytics'),
-            esc_html__('Tip: you can set a default date range in the plugin settings.', 'koko-analytics'),
-            sprintf(__('Tip: did you know there is a widget, shortcode and template function to <a href="%1s">show a list of the most viewed posts</a> on your site?', 'koko-analytics'), 'https://www.kokoanalytics.com/kb/showing-most-viewed-posts-on-your-wordpress-site/'),
-            sprintf(__('Tip: Use <a href="%1s">Koko Analytics Pro</a> to set up custom event tracking.', 'koko-analytics'), 'https://www.kokoanalytics.com/pricing/'),
-        ];
-        return $tips[array_rand($tips)];
     }
 
     private function maybe_show_adblocker_notice(): void

@@ -3,9 +3,9 @@ Contributors: Ibericode, DvanKooten
 Donate link: https://wordpress.org/support/plugin/koko-analytics/reviews/#new-post
 Tags: analytics, statistics, stats, privacy, counter
 Requires at least: 6.0
-Tested up to: 6.5
-Stable tag: 1.3.10
-License: GPLv3 or later
+Tested up to: 6.7
+Stable tag: 1.5.0
+License: GPL-3.0-or-later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Requires PHP: 7.3
 
@@ -35,9 +35,18 @@ Koko Analytics lets you focus on the important metrics, while respecting the pri
 - **Referrer spam:** Built-in blocklist to filter out referrer spam.
 - **Cached**: Fully compatible with pages served from any kind of cache.
 - **Open-Source**: The plugin code is [open-sourced](https://github.com/ibericode/koko-analytics) under the GPL-3.0-or-later license.
-- **Tested**: Ready for PHP 8.3, but compatible down to PHP 7.3.
+- **Tested**: Ready for PHP 8.4, but compatible down to PHP 7.3.
 - **AMP**: Tracks AMP powered pages too ([official AMP plugin](https://wordpress.org/plugins/amp/) only).
-- **Event Tracking**: You can set up custom event tracking through [Koko Analytics Pro](https://www.kokoanalytics.com/pricing/).
+- **Jetpack Stats importer**: You can import historical analytics data from Jetpack Stats into Koko Analytics.
+
+### Pro features
+
+The following features are available through [Koko Analytics Pro](https://www.kokoanalytics.com/pricing):
+
+- **Event Tracking**: Built-in events like outbound link clicks, form submissions plus the ability to [track any type of custom event](https://www.kokoanalytics.com/kb/tracking-events/).
+- **Email reports**: Daily, weekly or monthly [email reports](https://www.kokoanalytics.com/2024/08/21/setting-up-email-reports-with-koko-analytics-pro/).
+- **Export to CSV**: Exports the current dashboard view to CSV.
+
 
 ### Contributing
 
@@ -118,12 +127,112 @@ You can [purchase Koko Analytics Pro](https://www.kokoanalytics.com/pricing/) to
 == Screenshots ==
 
 1. Koko Analytics' dashboard to view your website statistics.
-2. The settings page where you can exclude certain user roles from being counted.
+2. The dashboard widget to quickly show your site visits over the last 2 weeks.
 3. A widget to show your most viewed posts (or any other post type) for a given period.
-4. The dashboard widget to quickly show your site visits over the last 2 weeks.
+4. The settings page where you can exclude certain user roles from being counted.
+5. Screenshot of settings page showing some features from Koko Analytics Pro.
 
 
 == Changelog ==
+
+#### 1.5.0 - Nov 27, 2024
+
+- Impose a maximum referrer URL length on data ingestion.
+- Replace column header for visitors and pageviews with icon on small screens.
+- Speed up `koko_analytics_counter` shortcode by having `Stats::get_total` not automatically pull in previous period.
+- Migrations runner now updates the local database version after each individual step.
+- Migrations runner now has a simple lock mechanism to ensure it runs atomically.
+- Output database size in localized format.
+- Output dates in localized format through `wp_date()`. Thanks to [Dominik Schilling](https://dominikschilling.de/).
+- Add missing text domain on settings page. Thanks to [Dominik Schilling](https://dominikschilling.de/).
+
+
+#### 1.4.5 - Nov 14, 2024
+
+- Use localized number formatting for all numbers troughout the dashboard.
+- Add feature to export and import data. Can only be used for sites with matching post ID's.
+- Highlight weekends in chart by using a slightly darker color for the visitors part of the bar.
+
+
+#### 1.4.4 - Nov 4, 2024
+
+- Add Jetpack Stats importer to import your historical analytics data into Koko Analytics. Go to the settings page (with Jetpack still enabled) to access it.
+- Fix settings page showing proxy IP instead of client IP if using reverse proxy.
+- Fix use of PHP 7.4 only feature in thousands separator in source code.
+- Auto-reload dashboard every minute if browser tab is active.
+- Do not show chart for just a single day of data.
+- Handle posts without title a little better by showing URL path instead.
+
+
+#### 1.4.3 - Oct 29, 2024
+
+- Fix "backtrack limit exhausted" triggering for certain referrer URL's without a subdomain part.
+- Gracefully handle missing referrer blocklist file. This fixes an issue when security software on the server flags the blocklist file as suspicious (due to it containing a list of known malware domains) and deleting it.
+- Increase width of first table column so rank isn't showing ellipsis.
+- Remove light grey border on table header row.
+- Right align numbers in dashboard widget. Thanks [Terence Eden](https://shkspr.mobi/blog/), who also did a wonderful post on [liberating your website statistics from Jetpack](https://shkspr.mobi/blog/2024/10/liberate-your-daily-statistics-from-jetpack/)!
+- Improved validation of referrer URL's and request parameters at data collection endpoint.
+
+
+#### 1.4.2 - Oct 25, 2024
+
+- Fix fatal error "invalid string operand" when referrer URL contains `t.co` shortlink.
+- Fix potential issue with `preg_match` returning incorrect type in function `get_referrer_url_label`
+
+
+#### 1.4.1 - Oct 25, 2024
+
+- Limit width of visitors and pageviews column in tables.
+- Fix `preg_replace` from returning an invalid type when an error occurs and the log the actual error that occurred.
+
+
+#### 1.4.0 - Oct 24, 2024
+
+- All HTML for the dashboard is now server-side generated, drastically reducing the amount of JavaScript and generally making the code base easier to maintain and/or extend.
+- All dashboard state can now be managed through URL query parameters, allowing you to bookmark or share your favorite views.
+- Use actual `<table>` elements for dashboard tables, for improved screen reader support.
+- Add filter hook `koko_analytics_referrer_url_href` to modify link `href` attribute for referrer URL's in dashboard.
+- Add filter hook `koko_analytics_referrer_url_label` to modify link labels for referrer URL's in dashboard.
+- Fix admin user not getting `view_koko_analytics` capability upon plugin activation.
+- Prevent empty referrer URL from being stored.
+- Group various Yandex referrer URL's into a single entry.
+- Minor memory usage improvements in autoloader implementation.
+
+
+#### 1.3.15 - Oct 15, 2024
+
+- Fix `href` attribute on hyperlinks in most viewed posts widget/shortcode/function template.
+
+
+#### 1.3.14 - Sep 23, 2024
+
+- Explicitly call `sprintf` from global namespace to benefit from upcoming sprintf related performance improvements in PHP 8.4.
+- Demo settings from [Koko Analytics Pro](https://www.kokoanalytics.com/pricing/) on plugin settings page.
+
+
+#### 1.3.13 - Sep 17, 2024
+
+- Ensure `Stats::get_totals` always returns a valid object.
+- Escape return values from `add_query_arg` to prevent reflected XSS attacks.
+- Use correct IP address even if client is behind proxy.
+- Various minor template performance improvements.
+
+
+#### 1.3.12 - Aug 18, 2024
+
+- Fix double pageview counts introduced in version 1.3.11.
+- Fix same-site showing up as referrer
+
+
+#### 1.3.11 - Aug 16, 2024
+
+- Only use referrer detection for determining returning visitors if cookie is disabled.
+- Add referrer aggregation rule for Brevo email campaign links.
+- Add referrer aggregation rule for Reddit links.
+- Add filter hook for easily adding or modifying Koko Analytics settings.
+- Add action hook for adding settings to Koko Analytics.
+- Explicitly get rid of all ES6 code in tracking script.
+
 
 #### 1.3.10 - Jun 20, 2024
 

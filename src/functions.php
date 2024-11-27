@@ -8,78 +8,92 @@
 
 namespace KokoAnalytics;
 
+use WP_Admin_Bar;
 use WP_Query;
 
 function maybe_collect_request()
 {
     // since we call this function (early) on every AJAX request, detect our specific request here
     // this allows us to short-circuit a bunch of unrelated AJAX stuff and gain a lot of performance
-    if (!isset($_GET['action']) || $_GET['action'] !== 'koko_analytics_collect' || !defined('DOING_AJAX') || !DOING_AJAX) {
+    if (!isset($_GET['action']) || $_GET['action'] !== 'koko_analytics_collect' || !\defined('DOING_AJAX') || !DOING_AJAX) {
         return;
     }
 
     collect_request();
 }
 
-function extract_pageview_data(): array
+function extract_pageview_data(array $raw): array
 {
     // do nothing if a required parameter is missing
-    if (
-        !isset($_GET['p'])
-        || !isset($_GET['nv'])
-        || !isset($_GET['up'])
-    ) {
-        return array();
+    if (!isset($raw['p'], $raw['nv'], $raw['up'])) {
+        return [];
     }
 
-    // do nothing if parameters are not of the correct type
-    if (
-        false === filter_var($_GET['p'], FILTER_VALIDATE_INT)
-        || false === filter_var($_GET['nv'], FILTER_VALIDATE_INT)
-        || false === filter_var($_GET['up'], FILTER_VALIDATE_INT)
-    ) {
-        return array();
+    // grab and validate parameters
+    $post_id = \filter_var($raw['p'], FILTER_VALIDATE_INT);
+    $new_visitor = \filter_var($raw['nv'], FILTER_VALIDATE_INT);
+    $unique_pageview = \filter_var($raw['up'], FILTER_VALIDATE_INT);
+    $referrer_url = !empty($raw['r']) ? \filter_var(\trim($raw['r']), FILTER_VALIDATE_URL) : '';
+
+    if ($post_id === false || $new_visitor === false || $unique_pageview === false || $referrer_url === false) {
+        return [];
     }
 
-    return array(
+    // limit referrer URL to 255 chars
+    $referrer_url = \substr($referrer_url, 0, 255);
+
+    return [
         'p',                // type indicator
-        $_GET['p'],   // 0: post ID
-        $_GET['nv'],  // 1: is new visitor?
-        $_GET['up'],  // 2: is unique pageview?
-        isset($_GET['r']) ? trim($_GET['r']) : '',   // 3: referrer URL
-    );
+        $post_id,
+        $new_visitor,
+        $unique_pageview,
+        $referrer_url,
+    ];
 }
 
-function extract_event_data(): array
+function extract_event_data(array $raw): array
 {
-    if (!isset($_GET['e']) || !isset($_GET['p']) || !isset($_GET['u']) || !isset($_GET['v'])) {
-        return array();
+    if (!isset($raw['e'], $raw['p'], $raw['u'], $raw['v'])) {
+        return [];
     }
 
-    if (false === filter_var($_GET['u'], FILTER_VALIDATE_INT) || false === filter_var($_GET['v'], FILTER_VALIDATE_INT)) {
-        return array();
+    $unique_event = \filter_var($raw['u'], FILTER_VALIDATE_INT);
+    $value = \filter_var($raw['v'], FILTER_VALIDATE_INT);
+    if ($unique_event === false || $value === false) {
+        return [];
     }
 
-    return array(
-        'e',                  // type indicator
-        trim($_GET['e']),     // 0: event name
-        trim($_GET['p']),     // 1: event parameter
-        (int) $_GET['u'],     // 2: is unique?
-        (int) $_GET['v'],     // 3: event value
-    );
+    $event_name = \trim($raw['e']);
+    $event_param = \trim($raw['p']);
+
+    if (\strlen($event_name) === 0) {
+        return [];
+    }
+
+    // limit event name and parameter lengths
+    $event_name = \substr($event_name, 0, 100);
+    $event_param = \substr($event_param, 0, 185);
+
+    return [
+        'e',                   // type indicator
+        $event_name,           // 0: event name
+        $event_param,          // 1: event parameter
+        $unique_event,         // 2: is unique?
+        $value,                // 3: event value
+    ];
 }
 
 function collect_request()
 {
     // ignore requests from bots, crawlers and link previews
-    if (empty($_SERVER['HTTP_USER_AGENT']) || preg_match("/bot|crawl|spider|seo|lighthouse|facebookexternalhit|preview/i", $_SERVER['HTTP_USER_AGENT'])) {
+    if (empty($_SERVER['HTTP_USER_AGENT']) || \preg_match("/bot|crawl|spider|seo|lighthouse|facebookexternalhit|preview/i", $_SERVER['HTTP_USER_AGENT'])) {
         return;
     }
 
     if (isset($_GET['e'])) {
-        $data = extract_event_data();
+        $data = extract_event_data($_GET);
     } else {
-        $data = extract_pageview_data();
+        $data = extract_pageview_data($_GET);
     }
 
     if (!empty($data)) {
@@ -110,7 +124,7 @@ function collect_request()
             $posts_viewed[] = (int) $_GET['p'];
         }
         $cookie = \join(',', $posts_viewed);
-        \setcookie('_koko_analytics_pages_viewed', $cookie, time() + 6 * 3600, '/');
+        \setcookie('_koko_analytics_pages_viewed', $cookie, \time() + 6 * 3600, '/');
     }
 
     exit;
@@ -166,7 +180,7 @@ function get_settings(): array
     );
     $settings         = (array) get_option('koko_analytics_settings', array());
     $settings         = array_merge($default_settings, $settings);
-    return $settings;
+    return apply_filters('koko_analytics_settings', $settings);
 }
 
 function get_most_viewed_posts(array $args = array()): array
@@ -230,7 +244,7 @@ function get_most_viewed_posts(array $args = array()): array
     return $r->posts;
 }
 
-function admin_bar_menu($wp_admin_bar)
+function admin_bar_menu(WP_Admin_Bar $wp_admin_bar)
 {
     // only show on frontend
     if (is_admin()) {
@@ -289,26 +303,13 @@ function using_custom_endpoint(): bool
     return (bool) get_option('koko_analytics_use_custom_endpoint', false);
 }
 
-function fmt_large_number(float $number): string
-{
-    if ($number < 10000.0) {
-        return $number;
-    }
-
-    $number /= 1000.0;
-    if ($number > 100.0) {
-        $number = round($number);
-    }
-    return rtrim(rtrim(number_format($number, 1), '0'), '.')  . 'K';
-}
-
 function test_custom_endpoint(): void
 {
     $endpoint_installer = new Endpoint_Installer();
     $endpoint_installer->verify();
 }
 
-function create_local_datetime($timestr): \DateTimeImmutable
+function create_local_datetime($timestr): ?\DateTimeImmutable
 {
     $offset = (float) get_option('gmt_offset', 0.0);
     if ($offset >= 0.00) {
@@ -320,5 +321,101 @@ function create_local_datetime($timestr): \DateTimeImmutable
         $now_local = $now_local->modify($offset . ' hours');
     }
 
-    return $now_local->modify($timestr);
+    $dt_local = $now_local->modify($timestr);
+    if (! $dt_local) {
+        return null;
+    }
+
+    return $dt_local;
+}
+
+/**
+ *  @param int|WP_Post $post
+ */
+function get_page_title($post): string
+{
+    $post = get_post($post);
+    if (!$post) {
+        return '(deleted post)';
+    }
+
+    $title = $post->post_title;
+
+    // if post has no title, use path + query part from permalink
+    if ($title === '') {
+        $permalink = get_permalink($post);
+        $url_parts = parse_url($permalink);
+        $title = $url_parts['path'];
+
+        if ($url_parts['query'] !== '') {
+            $title .= '?';
+            $title .= $url_parts['query'];
+        }
+    }
+
+    return $title;
+}
+
+function get_referrer_url_href(string $url): string
+{
+    if (strpos($url, '://t.co/') !== false) {
+        return 'https://twitter.com/search?q=' . urlencode($url);
+    } elseif (strpos($url, 'android-app://') === 0) {
+        return str_replace('android-app://', 'https://play.google.com/store/apps/details?id=', $url);
+    }
+
+    return apply_filters('koko_analytics_referrer_url_href', $url);
+}
+
+function get_referrer_url_label(string $url): string
+{
+    // if link starts with android-app://, turn that prefix into something more human readable
+    if (strpos($url, 'android-app://') === 0) {
+        return str_replace('android-app://', 'Android app: ', $url);
+    }
+
+    // strip protocol and www. prefix
+    $url = (string) preg_replace('/^https?:\/\/(?:www\.)?/', '', $url);
+
+    // trim trailing slash
+    $url = rtrim($url, '/');
+
+    return apply_filters('koko_analytics_referrer_url_label', $url);
+}
+
+/**
+ * Return's client IP for current request, even if behind a reverse proxy
+ */
+function get_client_ip(): string
+{
+    $ips = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
+
+    // X-Forwarded-For sometimes contains a comma-separated list of IP addresses
+    // @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For
+    if (! is_array($ips)) {
+        $ips = \array_map('trim', \explode(',', $ips));
+    }
+
+    // Always add REMOTE_ADDR to list of ips
+    $ips[] = $_SERVER['REMOTE_ADDR'] ?? '';
+
+    // return first valid IP address from list
+    foreach ($ips as $ip) {
+        if (\filter_var($ip, FILTER_VALIDATE_IP)) {
+            return $ip;
+        }
+    }
+
+    return '';
+}
+
+function percent_format_i18n($pct)
+{
+    if ($pct == 0) {
+        return '';
+    }
+
+    $prefix = $pct > 0 ? '+' : '';
+    $formatted = \number_format_i18n($pct * 100, 0);
+    return $prefix . $formatted . '%';
 }

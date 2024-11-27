@@ -10,50 +10,47 @@ namespace KokoAnalytics;
 
 class Stats
 {
-    public function get_totals(string $start_date, string $end_date, int $page = 0): ?object
+    /**
+     * @return object {
+     *  @type int visitors
+     *  @type int pageviews
+     * }
+     */
+    public function get_totals(string $start_date, string $end_date, int $page = 0, $include_previous = true): object
     {
         global $wpdb;
 
-        // if end date is a future date, cap it at today so that relative differences to previous period are fair
-        $today = create_local_datetime('now')->format('Y-m-d');
-        if ($end_date > $today) {
-            $end_date = $today;
-        }
-        $previous_start_date = gmdate('Y-m-d', strtotime($start_date) - (strtotime($end_date . ' 23:59:59') - strtotime($start_date)));
-
-        $table = $wpdb->prefix . 'koko_analytics_site_stats';
-        $where_a = 's.date >= %s AND s.date <= %s';
-        $args_a = array($start_date, $end_date);
-        $where_b = 's.date >= %s AND s.date < %s';
-        $args_b = array($previous_start_date, $start_date);
+        $table = $wpdb->prefix . 'koko_analytics_site_stats s';
+        $where = 's.date >= %s AND s.date <= %s';
+        $args = array($start_date, $end_date);
 
         if ($page > 0) {
-            $table = $wpdb->prefix . 'koko_analytics_post_stats';
-            $where_a .= ' AND s.id = %d';
-            $where_b .= ' AND s.id = %d';
-            $args_a[] = $page;
-            $args_b[] = $page;
+            $table = $wpdb->prefix . 'koko_analytics_post_stats s';
+            $where .= ' AND s.id = %d';
+            $args[] = $page;
         }
 
-        $sql                = $wpdb->prepare("SELECT
-			        cur.*,
-			        cur.visitors - prev.visitors AS visitors_change,
-			        cur.pageviews - prev.pageviews AS pageviews_change,
-			        cur.visitors / prev.visitors - 1 AS visitors_change_rel,
-			        cur.pageviews / prev.pageviews - 1 AS pageviews_change_rel
-			    FROM
-			        (SELECT COALESCE(SUM(visitors), 0) AS visitors, COALESCE(SUM(pageviews), 0) AS pageviews FROM {$table} s WHERE $where_a) AS cur,
-			        (SELECT COALESCE(SUM(visitors), 0) AS visitors, COALESCE(SUM(pageviews), 0) AS pageviews FROM {$table} s WHERE $where_b) AS prev;
-			", array_merge($args_a, $args_b));
+        $sql = $wpdb->prepare("
+            SELECT COALESCE(SUM(visitors), 0) AS visitors, COALESCE(SUM(pageviews), 0) AS pageviews
+		    FROM {$table}
+            WHERE {$where}
+			", $args);
         $result = $wpdb->get_row($sql);
+
+        // ensure we always return a valid object containing the keys we need
+        if (!$result) {
+            return (object) [
+                'pageviews' => 0,
+                'visitors' => 0,
+            ];
+        }
 
         // sometimes there are pageviews, but no counted visitors
         // this happens when the cookie was valid over a period of 2 calendar days
         // we can make this less obviously wrong by always specifying there was at least 1 visitors
         // whenever we have any pageviews
-        if ($result && $result->pageviews > 0 && $result->visitors == 0) {
+        if ($result->visitors == 0 && $result->pageviews > 0) {
             $result->visitors = 1;
-            $result->visitors_change += $result->visitors_change > 0 ? -1 : 1;
         }
 
         return $result;
@@ -121,8 +118,8 @@ class Stats
                 LIMIT %d, %d",
             array($start_date, $end_date, $offset, $limit)
         );
-        $results = $wpdb->get_results($sql);
 
+        $results = $wpdb->get_results($sql);
         return array_map(function ($row) {
             // special handling of records with ID 0 (indicates a view of the front page when front page is not singular)
             if ($row->id == 0) {
@@ -130,19 +127,27 @@ class Stats
                 $row->post_title     = get_bloginfo('name');
             } else {
                 $post = get_post($row->id);
-                if ($post) {
-                    $row->post_title = isset($post->post_title) ? $post->post_title : $post->post_name;
-                    $row->post_permalink = get_permalink($post);
-                } else {
-                    $row->post_title = '(deleted post)';
-                    $row->post_permalink = '';
-                }
+                $row->post_title = get_page_title($post);
+                $row->post_permalink = $post ? get_permalink($post) : '';
             }
 
             $row->pageviews = (int) $row->pageviews;
             $row->visitors  = (int) $row->visitors;
             return $row;
         }, $results);
+    }
+
+    public function count_posts(string $start_date, string $end_date): int
+    {
+        global $wpdb;
+        $sql = $wpdb->prepare(
+            "
+                SELECT COUNT(DISTINCT(s.id))
+                FROM {$wpdb->prefix}koko_analytics_post_stats s
+                WHERE s.date >= %s AND s.date <= %s",
+            array($start_date, $end_date)
+        );
+        return (int) $wpdb->get_var($sql);
     }
 
     public function get_referrers(string $start_date, string $end_date, int $offset = 0, int $limit = 10): array
@@ -161,5 +166,19 @@ class Stats
             array($start_date, $end_date, $offset, $limit)
         );
         return $wpdb->get_results($sql);
+    }
+
+    public function count_referrers(string $start_date, string $end_date): int
+    {
+        global $wpdb;
+        $sql = $wpdb->prepare(
+            "
+                SELECT COUNT(DISTINCT(s.id))
+                FROM {$wpdb->prefix}koko_analytics_referrer_stats s
+                WHERE s.date >= %s
+                  AND s.date <= %s",
+            array($start_date, $end_date)
+        );
+        return (int) $wpdb->get_var($sql);
     }
 }

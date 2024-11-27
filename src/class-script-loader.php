@@ -12,10 +12,10 @@ use WP_User;
 
 class Script_Loader
 {
-    public function init()
+    public function __construct()
     {
-        add_action('wp_enqueue_scripts', array( $this, 'maybe_enqueue_script' ));
-        add_action('amp_print_analytics', array( $this, 'print_amp_analytics_tag' ));
+        add_action('wp_enqueue_scripts', array($this, 'maybe_enqueue_script'), 10, 0);
+        add_action('amp_print_analytics', array($this, 'print_amp_analytics_tag'), 10, 0);
     }
 
     /**
@@ -33,14 +33,14 @@ class Script_Loader
         if (count($settings['exclude_user_roles']) > 0) {
             $user = wp_get_current_user();
 
-            if ($user->exists() && $this->user_has_roles($user, $settings['exclude_user_roles'])) {
+            if ($user instanceof WP_User && $user->exists() && $this->user_has_roles($user, $settings['exclude_user_roles'])) {
                 return;
             }
         }
 
         // Do not load script if excluded by IP address
         if (count($settings['exclude_ip_addresses']) > 0) {
-            $ip_address = $_SERVER['REMOTE_ADDR'] ?? '';
+            $ip_address = get_client_ip();
             if ($ip_address !== '' && in_array($ip_address, $settings['exclude_ip_addresses'], true)) {
                 return;
             }
@@ -61,7 +61,7 @@ class Script_Loader
             wp_enqueue_script('koko-analytics', plugins_url('assets/dist/js/script.js', KOKO_ANALYTICS_PLUGIN_FILE), array(), KOKO_ANALYTICS_VERSION, true);
         } else {
             $this->print_js_object();
-            echo '<script defer src="', plugins_url(sprintf('assets/dist/js/script.js?ver=%s', KOKO_ANALYTICS_VERSION), KOKO_ANALYTICS_PLUGIN_FILE), '"></script>';
+            echo '<script defer src="', plugins_url('assets/dist/js/script.js?ver=' . KOKO_ANALYTICS_VERSION, KOKO_ANALYTICS_PLUGIN_FILE), '"></script>';
         }
     }
 
@@ -98,11 +98,7 @@ class Script_Loader
     private function get_cookie_path(): string
     {
         $home_url = home_url();
-        // 8 characters for protocol
-        // 1 or more characters for domain name
-        // = 9 char offset
-        $pos = strpos($home_url, '/', 9);
-        return $pos !== false ? substr($home_url, $pos) : '/';
+        return parse_url($home_url, PHP_URL_PATH) ?? '/';
     }
 
     public function print_js_object()
@@ -111,6 +107,7 @@ class Script_Loader
         $script_config = array(
             // the URL of the tracking endpoint
             'url'   => $this->get_tracker_url(),
+            'site_url' => get_home_url(),
 
             // ID of the current post (or -1 in case of non-singular type)
             'post_id'       => (int) $this->get_post_id(),
@@ -148,12 +145,17 @@ class Script_Loader
                 ),
             ),
         );
-        echo sprintf('<amp-analytics><script type="application/json">%s</script></amp-analytics>', json_encode($config));
+
+        echo '<amp-analytics><script type="application/json">', json_encode($config), '</script></amp-analytics>';
     }
 
+    /**
+     * @param string $tag
+     * @param string $handle
+     */
     public function add_async_attribute($tag, $handle)
     {
-        if ($handle !== 'koko-analytics' || stripos($tag, 'defer') !== false) {
+        if ($handle !== 'koko-analytics' || strpos($tag, ' defer') !== false) {
             return $tag;
         }
 

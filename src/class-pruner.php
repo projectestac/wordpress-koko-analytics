@@ -10,10 +10,10 @@ namespace KokoAnalytics;
 
 class Pruner
 {
-    public function init()
+    public function __construct()
     {
-        add_action('koko_analytics_prune_data', array( $this, 'run' ));
-        add_action('admin_init', array( $this, 'maybe_schedule' ));
+        add_action('koko_analytics_prune_data', array($this, 'run'), 10, 0);
+        add_action('admin_init', array($this, 'maybe_schedule'), 10, 0);
     }
 
     public function maybe_schedule()
@@ -38,7 +38,7 @@ class Pruner
             return;
         }
 
-        $date = create_local_datetime(sprintf('-%d months', $settings['prune_data_after_months']))->format('Y-m-d');
+        $date = create_local_datetime(\sprintf('-%d months', $settings['prune_data_after_months']))->format('Y-m-d');
 
         // delete stats older than date above
         $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}koko_analytics_site_stats WHERE date < %s", $date));
