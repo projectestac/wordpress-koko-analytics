@@ -10,23 +10,7 @@ namespace KokoAnalytics;
 
 class Plugin
 {
-    /**
-     * @var Aggregator
-     */
-    private $aggregator;
-
-    /**
-     * @param Aggregator $aggregator
-     */
-    public function __construct(Aggregator $aggregator)
-    {
-        $this->aggregator = $aggregator;
-
-        register_activation_hook(KOKO_ANALYTICS_PLUGIN_FILE, [$this, 'on_activation']);
-        add_action('init', [$this, 'maybe_run_actions'], 20, 0);
-    }
-
-    public function on_activation(): void
+    public static function setup_capabilities(): void
     {
         // add capabilities to administrator role (if it exists)
         $role = get_role('administrator');
@@ -34,31 +18,47 @@ class Plugin
             $role->add_cap('view_koko_analytics');
             $role->add_cap('manage_koko_analytics');
         }
-
-        // schedule action for aggregating stats
-        $this->aggregator->setup_scheduled_event();
-
-        // create optimized endpoint file
-        $endpoint_installer = new Endpoint_Installer();
-        $endpoint_installer->install();
     }
 
-    public function maybe_run_actions(): void
+    public static function install_optimized_endpoint(): void
     {
-        if (isset($_GET['koko_analytics_action'])) {
-            $action = $_GET['koko_analytics_action'];
-        } elseif (isset($_POST['koko_analytics_action'])) {
-            $action = $_POST['koko_analytics_action'];
-        } else {
-            return;
+        // (maybe) create optimized endpoint file
+        $endpoint_installer = new Endpoint_Installer();
+        if ($endpoint_installer->is_eligibile()) {
+            $endpoint_installer->install();
+        }
+    }
+
+    public static function remove_optimized_endpoint(): void
+    {
+        // delete custom endpoint file
+        if (file_exists(rtrim(ABSPATH, '/') . '/koko-analytics-collect.php')) {
+            unlink(rtrim(ABSPATH, '/') . '/koko-analytics-collect.php');
+        }
+    }
+
+    public static function create_and_protect_uploads_dir(): void
+    {
+        $filename = get_buffer_filename();
+        $directory = \dirname($filename);
+        if (! \is_dir($directory)) {
+            \mkdir($directory, 0755, true);
         }
 
-        if (!current_user_can('manage_koko_analytics')) {
-            return;
-        }
+        // create empty index.html to prevent directory listing
+        file_put_contents("$directory/index.html", '');
 
-        do_action('koko_analytics_' . $action);
-        wp_safe_redirect(remove_query_arg('koko_analytics_action'));
-        exit;
+        // create .htaccess in case we're using apache
+        $lines = [
+            '<IfModule !authz_core_module>',
+            'Order deny,allow',
+            'Deny from all',
+            '</IfModule>',
+            '<IfModule authz_core_module>',
+            'Require all denied',
+            '</IfModule>',
+            '',
+        ];
+        file_put_contents("$directory/.htaccess", join(PHP_EOL, $lines));
     }
 }

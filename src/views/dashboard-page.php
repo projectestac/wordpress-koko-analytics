@@ -1,9 +1,12 @@
 <?php
 
 use KokoAnalytics\Chart_View;
+use KokoAnalytics\Fmt;
+
+use function KokoAnalytics\get_page_title;
 
 defined('ABSPATH') or exit;
-$tab = 'dashboard';
+
 
 /**
  * @var \KokoAnalytics\Dashboard $this
@@ -17,18 +20,18 @@ $tab = 'dashboard';
  * @var \KokoAnalytics\Stats $stats
  */
 
-use function KokoAnalytics\get_page_title;
-use function KokoAnalytics\get_referrer_url_href;
-use function KokoAnalytics\get_referrer_url_label;
-use function KokoAnalytics\percent_format_i18n;
+$tab = 'dashboard';
+
+require __DIR__ . '/../template-functions.php';
 ?>
 <div class="wrap">
+    <?php $this->maybe_show_pro_notice(); ?>
     <?php $this->maybe_show_adblocker_notice(); ?>
 
     <div class="ka-dashboard-nav">
         <div class="ka-dashboard-nav--left">
             <div class="ka-datepicker">
-                <div class='ka-datepicker--label' tabindex="0" aria-expanded="false" aria-controls="ka-datepicker-dropdown" onclick="var el = document.getElementById('ka-datepicker-dropdown'); el.style.display = el.offsetParent === null ? 'block' : 'none'; this.ariaExpanded =  el.offsetParent === null ? 'false' : 'true';">
+                <div class='ka-datepicker--label' tabindex="0" role="button" aria-expanded="false" aria-controls="ka-datepicker-dropdown" onclick="var el = document.getElementById('ka-datepicker-dropdown'); el.style.display = el.offsetParent === null ? 'block' : 'none'; this.ariaExpanded =  el.offsetParent === null ? 'false' : 'true';">
                     <?php echo wp_date($dateFormat, $dateStart->getTimestamp()); ?> — <?php echo wp_date($dateFormat, $dateEnd->getTimestamp()); ?>
                 </div>
 
@@ -43,34 +46,31 @@ use function KokoAnalytics\percent_format_i18n;
                         <a class="ka-datepicker--quicknav-next" href="<?php echo esc_attr(add_query_arg(['start_date' => $nextDates[0]->format('Y-m-d'), 'end_date' => $nextDates[1]->format('Y-m-d')], $dashboard_url)); ?>"><?php esc_html_e('Next date range', 'koko-analytics'); ?></a>
                         <?php } ?>
                     </div>
-                    <form method="get" action="<?php echo esc_attr($dashboard_url); ?>">
-                        <?php foreach (['page', 'koko-analytics-dashboard'] as $key) {
+                    <form method="get">
+                        <?php foreach (['page', 'p', 'koko-analytics-dashboard'] as $key) {
                             if (isset($_GET[$key])) {
                                 echo '<input type="hidden" name="', $key, '" value="', esc_attr($_GET[$key]), '">';
                             }
                         } ?>
 
                         <div class="ka-datepicker--dropdown-content">
-                            <label for="ka-date-presets"><?php echo esc_html__('Date range', 'koko-analytics'); ?></label>
+                            <label for="ka-date-presets"><?php esc_html_e('Date range', 'koko-analytics'); ?></label>
                             <select id="ka-date-presets" name="view">
-                                <option value="custom" <?php echo $range === 'custom' ? 'selected' : ''; ?> disabled><?php echo esc_html__('Custom', 'koko-analytics'); ?></option>
-                                <?php foreach ($this->get_date_presets() as $key => $label) {
-                                    ?>
-                                    <option value="<?php echo $key; ?>"
-                                        <?php echo ( $key === $range ) ? ' selected' : ''; ?>><?php echo esc_html($label); ?>
-                                    </option>
-                                <?php } ?>
+                                <option value="custom" <?php echo $range === 'custom' ? 'selected' : ''; ?> disabled><?php esc_html_e('Custom', 'koko-analytics'); ?></option>
+                                <?php foreach ($this->get_date_presets() as $key => $label) :
+                                    ?><option value="<?php echo $key; ?>"<?php echo ( $key === $range ) ? ' selected' : ''; ?>><?php echo esc_html($label); ?></option><?php
+                                endforeach; ?>
                             </select>
                             <div style="display: flex; margin-top: 12px;">
                                 <div>
-                                    <label for='ka-date-start'><?php echo esc_html__('Start date', 'koko-analytics'); ?></label>
-                                    <input name="start_date" id='ka-date-start' type="date" size="10" placeholder="YYYY-MM-DD" min="2000-01-01" max="2100-01-01"
+                                    <label for='ka-date-start'><?php esc_html_e('Start date', 'koko-analytics'); ?></label>
+                                    <input name="start_date" id='ka-date-start' type="date" size="10" min="2000-01-01" max="2100-01-01"
                                            value="<?php echo $dateStart->format('Y-m-d'); ?>">
                                     <span>&nbsp;&mdash;&nbsp;</span>
                                 </div>
                                 <div>
-                                    <label for='ka-date-end'><?php echo esc_html__('End date', 'koko-analytics'); ?></label>
-                                    <input name="end_date" id='ka-date-end' type="date" size="10" placeholder="YYYY-MM-DD" min="2000-01-01" max="2100-01-01"
+                                    <label for='ka-date-end'><?php esc_html_e('End date', 'koko-analytics'); ?></label>
+                                    <input name="end_date" id='ka-date-end' type="date" size="10" min="2000-01-01" max="2100-01-01"
                                            value="<?php echo $dateEnd->format('Y-m-d'); ?>">
                                 </div>
                             </div>
@@ -95,29 +95,30 @@ use function KokoAnalytics\percent_format_i18n;
     </div>
     <table id="ka-totals" class='ka-totals m'>
         <tbody>
-
         <?php
         /* Total visitors */
         $diff = $totals->visitors - $totals_previous->visitors;
         $change = $totals_previous->visitors == 0 ? 0 : ($totals->visitors / $totals_previous->visitors) - 1;
         ?>
         <tr class="<?php echo $diff > 0 ? 'ka-up' : ''; ?> <?php echo $diff < 0 ? 'ka-down' : ''; ?>">
-            <th><?php echo esc_html__('Total visitors', 'koko-analytics'); ?></th>
+            <th><?php esc_html_e('Total visitors', 'koko-analytics'); ?></th>
             <td class='ka-totals--amount'>
                 <span title="<?php echo esc_attr($totals->visitors); ?>"><?php echo number_format_i18n($totals->visitors); ?></span>
                 <span class="ka-totals--change">
-                    <?php echo percent_format_i18n($change); ?>
+                    <?php echo Fmt::percent($change); ?>
                 </span>
             </td>
             <td class='ka-totals--subtext'>
-                <?php if ($diff != 0) {
-                    ?><span><?php echo number_format_i18n(abs($diff)); ?></span><?php
-                } ?>
-                <?php if ($diff > 0) {
-                    ?> <span class="ka-totals--subtext-up"><?php echo esc_html__('more than previous period', 'koko-analytics'); ?></span><?php
-                } ?>
-                <?php if ($diff < 0) {
-                    ?><span class="ka-totals--subtext-down"><?php echo esc_html__('less than previous period', 'koko-analytics'); ?></span><?php
+                <?php
+                if ($diff != 0) {
+                    echo number_format_i18n(abs($diff));
+                    echo ' ';
+                }
+                if ($diff > 0) {
+                    echo esc_html__('more than previous period', 'koko-analytics');
+                }
+                if ($diff < 0) {
+                    echo esc_html__('less than previous period', 'koko-analytics');
                 } ?>
             </td>
         </tr>
@@ -127,30 +128,32 @@ use function KokoAnalytics\percent_format_i18n;
         $change = $totals_previous->pageviews == 0 ? 0 : ($totals->pageviews / $totals_previous->pageviews) - 1;
         ?>
         <tr class="<?php echo $diff > 0 ? 'ka-up' : ''; ?> <?php echo $diff < 0 ? 'ka-down' : ''; ?>">
-            <th><?php echo esc_html__('Total pageviews', 'koko-analytics'); ?></th>
+            <th><?php esc_html_e('Total pageviews', 'koko-analytics'); ?></th>
             <td class='ka-totals--amount'>
                 <span title="<?php echo esc_attr($totals->pageviews); ?>"><?php echo number_format_i18n($totals->pageviews); ?></span>
                 <span class="ka-totals--change">
-                    <?php echo percent_format_i18n($change); ?>
+                    <?php echo Fmt::percent($change); ?>
                 </span>
             </td>
             <td class='ka-totals--subtext'>
-                <?php if ($diff != 0) {
-                    ?><span><?php echo number_format_i18n(abs($diff)); ?></span><?php
-                } ?>
-                <?php if ($diff > 0) {
-                    ?><span class="ka-totals--subtext-up"><?php echo esc_html__('more than previous period', 'koko-analytics'); ?></span><?php
-                } ?>
-                <?php if ($diff < 0) {
-                    ?><span class="ka-totals--subtext-down"><?php echo esc_html__('less than previous period', 'koko-analytics'); ?></span><?php
+               <?php
+                if ($diff != 0) {
+                    echo number_format_i18n(abs($diff));
+                    echo ' ';
+                }
+                if ($diff > 0) {
+                    echo esc_html__('more than previous period', 'koko-analytics');
+                }
+                if ($diff < 0) {
+                    echo esc_html__('less than previous period', 'koko-analytics');
                 } ?>
             </td>
         </tr>
         <tr id="ka-realtime">
-            <th><?php echo esc_html__('Realtime pageviews', 'koko-analytics'); ?></th>
+            <th><?php esc_html_e('Realtime pageviews', 'koko-analytics'); ?></th>
             <td class='ka-totals--amount'><?php echo number_format_i18n($realtime); ?></td>
             <td class='ka-totals--subtext'>
-                <?php echo esc_html__('pageviews in the last hour', 'koko-analytics'); ?>
+                <?php esc_html_e('pageviews in the last hour', 'koko-analytics'); ?>
             </td>
         </tr>
         </tbody>
@@ -198,10 +201,10 @@ use function KokoAnalytics\percent_format_i18n;
             <?php if ($posts_offset >= $posts_limit || $posts_offset + $posts_limit < $posts_count) { ?>
            <div class='ka-pagination'>
                 <?php if ($posts_offset >= $posts_limit) { ?>
-                <a class='ka-pagination--prev' href="<?php echo esc_attr(add_query_arg(['posts' => [ 'offset' => $posts_offset - $posts_limit, 'limit' => $posts_limit ]])); ?>"><?php echo esc_html__('Previous', 'koko-analytics'); ?></a>
+                <a class='ka-pagination--prev' href="<?php echo esc_attr(add_query_arg(['posts' => [ 'offset' => $posts_offset - $posts_limit, 'limit' => $posts_limit ]])); ?>"><?php esc_html_e('Previous', 'koko-analytics'); ?></a>
                 <?php } ?>
                 <?php if ($posts_offset + $posts_limit < $posts_count) { ?>
-                <a class='ka-pagination--next' href="<?php echo esc_attr(add_query_arg(['posts' => [ 'offset' => $posts_offset + $posts_limit, 'limit' => $posts_limit ]])); ?>"><?php echo esc_html__('Next', 'koko-analytics'); ?></a>
+                <a class='ka-pagination--next' href="<?php echo esc_attr(add_query_arg(['posts' => [ 'offset' => $posts_offset + $posts_limit, 'limit' => $posts_limit ]])); ?>"><?php esc_html_e('Next', 'koko-analytics'); ?></a>
                 <?php } ?>
             </div>
             <?php } ?>
@@ -222,7 +225,7 @@ use function KokoAnalytics\percent_format_i18n;
                     <?php foreach ($referrers as $i => $r) { ?>
                         <tr>
                             <td><?php echo $referrers_offset + $i + 1; ?></td>
-                            <td><a href="<?php echo esc_attr(get_referrer_url_href($r->url)); ?>"><?php echo get_referrer_url_label(esc_html($r->url)); ?></a></td>
+                            <td><a href="<?php echo esc_attr(Fmt::referrer_url_href($r->url)); ?>"><?php echo Fmt::referrer_url_label(esc_html($r->url)); ?></a></td>
                             <td><?php echo number_format_i18n(max(1, $r->visitors)); ?></td>
                             <td><?php echo number_format_i18n($r->pageviews); ?></td>
                         </tr>
@@ -239,10 +242,10 @@ use function KokoAnalytics\percent_format_i18n;
             <?php if ($referrers_offset >= $referrers_limit || $referrers_offset + $referrers_limit < $referrers_count) { ?>
            <div class='ka-pagination'>
                 <?php if ($referrers_offset >= $referrers_limit) { ?>
-                <a class='ka-pagination--prev' href="<?php echo esc_attr(add_query_arg(['referrers' => [ 'offset' => $referrers_offset - $referrers_limit, 'limit' => $referrers_limit ]])); ?>"><?php echo esc_html__('Previous', 'koko-analytics'); ?></a>
+                <a class='ka-pagination--prev' href="<?php echo esc_attr(add_query_arg(['referrers' => [ 'offset' => $referrers_offset - $referrers_limit, 'limit' => $referrers_limit ]])); ?>"><?php esc_html_e('Previous', 'koko-analytics'); ?></a>
                 <?php } ?>
                 <?php if ($referrers_offset + $referrers_limit < $referrers_count) { ?>
-                <a class='ka-pagination--next' href="<?php echo esc_attr(add_query_arg(['referrers' => [ 'offset' => $referrers_offset + $referrers_limit, 'limit' => $referrers_limit ]])); ?>"><?php echo esc_html__('Next', 'koko-analytics'); ?></a>
+                <a class='ka-pagination--next' href="<?php echo esc_attr(add_query_arg(['referrers' => [ 'offset' => $referrers_offset + $referrers_limit, 'limit' => $referrers_limit ]])); ?>"><?php esc_html_e('Next', 'koko-analytics'); ?></a>
                 <?php } ?>
             </div>
             <?php } ?>

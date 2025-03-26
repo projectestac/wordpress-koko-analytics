@@ -1,4 +1,4 @@
-Koko Analytics
+Koko Analytics for WordPress
 ===========
 [![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://raw.githubusercontent.com/ibericode/koko-analytics/master/LICENSE)
 [![Active installs](https://img.shields.io/wordpress/plugin/installs/koko-analytics.svg)](https://wordpress.org/plugins/koko-analytics/advanced/)
@@ -11,6 +11,10 @@ It aims to be a simple replacement for Google Analytics that respects the privac
 
 You can view a [live demo of Koko Analytics here](https://www.kokoanalytics.com/?koko-analytics-dashboard).
 
+> [!TIP]
+> We're working on a [standalone version of Koko Analytics](https://github.com/koko-analytics/koko-analytics) that you can self-host to track any site, not just WordPress sites.
+
+
 ## Features
 
 - **Plug and play**: After activating the plugin, stats are recorded right away.
@@ -21,6 +25,7 @@ You can view a [live demo of Koko Analytics here](https://www.kokoanalytics.com/
 - **Fast**: Handles thousands of daily visitors or sudden bursts of traffic without breaking a sweat.
 - **Lightweight**: Adds less than 850 bytes of data to your pages.
 - **Storage**: A year worth of data takes up less than 5MB of database storage.
+- **REST API**: You can access your data from anywhere via REST API endpoints.
 - **Cached**: Fully compatible with pages served from cache.
 - **Open-source**: GPLv3 licensed.
 - **Translated**: Fully translated into English, German, Dutch, Spanish, Japanese, Croatian, Swedish, Danish, Finnish, Italian, Korean and Russian.
@@ -32,14 +37,17 @@ You can view a [live demo of Koko Analytics here](https://www.kokoanalytics.com/
 
 ### Koko Analytics Pro
 
-Koko Analytics is a freemium plugin. The core features listed above are available for free. Certain advanced features are bundled in an add-on plugin called Koko Analytics Pro:
+Koko Analytics is a freemium WordPress plugin. The core features listed above are available for free. Certain advanced features are bundled in an add-on plugin called Koko Analytics Pro:
 
-- Outbound link tracking
-- Track form submissions
-- Export dashboard view to CSV
-- Periodic email reports
+- [Event Tracking](https://www.kokoanalytics.com/features/custom-event-tracking/): track outbound link clicks, form submissions or any other type of custom event.
+- [Email Reports](https://www.kokoanalytics.com/features/email-reports/): Receive a daily, weekly or monthly email summary of your website's most important statistics.
+- [CSV Export](https://www.kokoanalytics.com/features/csv-export/): The ability to export your dashboard data to CSV for advanced analysis.
+- [Pageviews Column](https://www.kokoanalytics.com/features/pageviews-column/): Shows the number of pageviews over a configurable time period right in your WP Admin posts and pages overview.
+- [Admin Bar](https://www.kokoanalytics.com/features/admin-bar/): Shows daily pageviews for a specific page in your WordPress Admin Bar.
+- [Traffic Spike Notifications](https://www.kokoanalytics.com/features/traffic-spike-notifications/): receive an email notification when your website experiences a traffic spike.
 
-You can [purchase Koko Analytics Pro from our site](https://www.kokoanalytics.com/pricing/).
+
+You can [purchase Koko Analytics Pro here](https://www.kokoanalytics.com/pricing/).
 
 
 ## Installation
@@ -49,7 +57,7 @@ You can [purchase Koko Analytics Pro from our site](https://www.kokoanalytics.co
 Note that these are minimum required versions. We recommend running an [officially supported version of PHP](https://www.php.net/supported-versions).
 
 - WordPress 6.0 or higher.
-- PHP 7.3 or higher.
+- PHP 7.4 or higher.
 
 ### Installing latest stable release
 

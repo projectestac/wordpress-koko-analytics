@@ -10,7 +10,7 @@ namespace KokoAnalytics;
 
 class Chart_View
 {
-    public function __construct(array $data, \DateTimeInterface $dateStart, \DateTimeInterface $dateEnd, int $height = 280)
+    public function __construct(array $data, \DateTimeInterface $dateStart, \DateTimeInterface $dateEnd, int $height = 280, bool $showGroupOptions = true)
     {
         $n = count($data);
         $tick_width = $n > 0 ? 100.0 / (float) $n : 100.0;
@@ -25,8 +25,20 @@ class Chart_View
         $inner_height = $height - $padding_top - $padding_bottom;
         $height_modifier = $y_max_nice > 0 ? $inner_height / $y_max_nice : 1;
         $dateFormat = (string) get_option('date_format', 'Y-m-d');
+        $daysDiff = abs($dateEnd->diff($dateStart)->days);
+        $timezone = wp_timezone();
         ?>
         <div class="ka-chart">
+            <?php if ($showGroupOptions && $daysDiff > 7) { ?>
+            <div class="ka-chart-group-by">
+                <?php esc_html_e('Group by', 'koko-analytics'); ?>
+                <a href="<?php echo esc_attr(add_query_arg(['group' => 'day'])); ?>"><?php esc_html_e('days', 'koko-analytics'); ?></a>
+                <a href="<?php echo esc_attr(add_query_arg(['group' => 'week'])); ?>"><?php esc_html_e('weeks', 'koko-analytics'); ?></a>
+                <?php if ($daysDiff > 31) {
+                    ?><a href="<?php echo esc_attr(add_query_arg(['group' => 'month'])); ?>"><?php esc_html_e('months', 'koko-analytics'); ?></a><?php
+                } ?>
+            </div>
+            <?php } /* end show group options */ ?>
             <svg width="100%" height="<?php echo $height; ?>" id="ka-chart">
               <g class="axes-y" transform="translate(<?php echo $padding_left; ?>, <?php echo $padding_top; ?>)" text-anchor="end" data-padding="<?php echo $padding_left; ?>">
                 <text x="0" y="<?php echo $inner_height; ?>" fill="#757575" dy="0.3em" >0</text>
@@ -42,13 +54,13 @@ class Chart_View
               </g>
                <g class="bars" transform="translate(0, <?php echo $padding_top; ?>)" style="display: none;">
                 <?php foreach ($data as $tick) {
-                    $dt = (new \DateTimeImmutable($tick->date));
+                    $dt = (new \DateTimeImmutable($tick->date, $timezone));
                     $is_weekend = (int) $dt->format('N') >= 6;
                     $class_attr = $is_weekend ? 'class="weekend" ' : '';
                     // data attributes are for the hover tooltip, which is handled in JS
                     echo '<g ', $class_attr, 'data-date="', \wp_date($dateFormat, $dt->getTimestamp()), '" data-pageviews="', \number_format_i18n($tick->pageviews), '" data-visitors="', \number_format_i18n($tick->visitors),'">';
-                    echo '<rect class="ka--pageviews" height="', $tick->pageviews * $height_modifier,'" y="', ($inner_height - $tick->pageviews * $height_modifier),'"></rect>';
-                    echo '<rect class="ka--visitors" height="', ($tick->visitors * $height_modifier), '" y="', ($inner_height - $tick->visitors * $height_modifier), '"></rect>';
+                    echo '<rect class="ka--pageviews" width="0" height="', $tick->pageviews * $height_modifier,'" y="', ($inner_height - $tick->pageviews * $height_modifier),'"></rect>';
+                    echo '<rect class="ka--visitors" width="0" height="', ($tick->visitors * $height_modifier), '" y="', ($inner_height - $tick->visitors * $height_modifier), '"></rect>';
                     echo '<line stroke="#ddd" y1="', $inner_height, '" y2="', ($inner_height + 6),'"></line>';
                     echo '</g>';
                 } ?>
@@ -85,6 +97,6 @@ class Chart_View
 
         $e = floor(log10($n));
         $pow = pow(10, $e);
-        return (int) ceil($n / $pow) * $pow;
+        return (int) (ceil($n / $pow) * $pow);
     }
 }

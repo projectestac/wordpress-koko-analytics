@@ -4,23 +4,23 @@ Donate link: https://wordpress.org/support/plugin/koko-analytics/reviews/#new-po
 Tags: analytics, statistics, stats, privacy, counter
 Requires at least: 6.0
 Tested up to: 6.7
-Stable tag: 1.5.0
+Stable tag: 1.7.2
 License: GPL-3.0-or-later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
-Requires PHP: 7.3
+Requires PHP: 7.4
 
 Privacy-friendly and efficient analytics for your WordPress site
 
 == Description ==
 
-Koko Analytics is a privacy-friendly, simple and lightweight analytics plugin for WordPress. It does not use any external services, so data about your visitors is never shared with any third-party.
-No visitor specific data is collected, only aggregated counts.
+Koko Analytics is a privacy-friendly website analytics plugin for WordPress. It does not use any external services, so no data is shared with any third-party. Nothing specific to any individual visitor is collected, only aggregated counts.
 
-Stop sharing visitor data with third-party companies who also happen to sell ads.
+Stop sharing visitor data with third-party companies who also happen to sell ads. Stop slowing down your website with large tracking scripts. Liberate your website analytics!
 
-Stop unnecessarily slowing down your website.
+[Koko Analytics](https://www.kokoanalytics.com/) lets you focus on the important metrics, while respecting the privacy of your visitors.
 
-Koko Analytics lets you focus on the important metrics, while respecting the privacy of your visitors.
+You can view a [live demo of Koko Analytics here](https://www.kokoanalytics.com/?koko-analytics-dashboard).
+
 
 ### Features
 
@@ -30,27 +30,34 @@ Koko Analytics lets you focus on the important metrics, while respecting the pri
 - **No cookies**: There is an option to not use any cookies.
 - **Fast**: Handles hundreds of concurrent pageviews without breaking a sweat.
 - **Lightweight**: Adds less than 850 bytes of data to your pages. A year worth of data will take up less than 10 MB of storage.
-- **GDPR**: Compliant by design.
+- **GDPR Compliant** by design.
 - **Metrics**: All the essentials: total pageviews, unique pageviews and referral URL's.
 - **Referrer spam:** Built-in blocklist to filter out referrer spam.
+- **REST API**: You can access your data from anywhere via REST API endpoints.
 - **Cached**: Fully compatible with pages served from any kind of cache.
 - **Open-Source**: The plugin code is [open-sourced](https://github.com/ibericode/koko-analytics) under the GPL-3.0-or-later license.
 - **Tested**: Ready for PHP 8.4, but compatible down to PHP 7.3.
 - **AMP**: Tracks AMP powered pages too ([official AMP plugin](https://wordpress.org/plugins/amp/) only).
-- **Jetpack Stats importer**: You can import historical analytics data from Jetpack Stats into Koko Analytics.
+- **Import data from other plugins**: You can import historical analytics data from Jetpack Stats or Burst Statistics into Koko Analytics.
 
-### Pro features
 
-The following features are available through [Koko Analytics Pro](https://www.kokoanalytics.com/pricing):
+### Koko Analytics Pro
 
-- **Event Tracking**: Built-in events like outbound link clicks, form submissions plus the ability to [track any type of custom event](https://www.kokoanalytics.com/kb/tracking-events/).
-- **Email reports**: Daily, weekly or monthly [email reports](https://www.kokoanalytics.com/2024/08/21/setting-up-email-reports-with-koko-analytics-pro/).
-- **Export to CSV**: Exports the current dashboard view to CSV.
+All of the features listed above are available for free. Some additional features are available through [Koko Analytics Pro](https://www.kokoanalytics.com/pricing):
+
+- [Event Tracking](https://www.kokoanalytics.com/features/custom-event-tracking/): track outbound link clicks, form submissions or any other type of custom event.
+- [Email Reports](https://www.kokoanalytics.com/features/email-reports/): Receive a daily, weekly or monthly email summary of your website's most important statistics.
+- [CSV Export](https://www.kokoanalytics.com/features/csv-export/): The ability to export your dashboard data to CSV for advanced analysis.
+- [Pageviews Column](https://www.kokoanalytics.com/features/pageviews-column/): Shows the number of pageviews over a configurable time period right in your WP Admin posts and pages overview.
+- [Admin Bar](https://www.kokoanalytics.com/features/admin-bar/): Shows daily pageviews for a specific page in your WordPress Admin Bar.
+- [Traffic Spike Notifications](https://www.kokoanalytics.com/features/traffic-spike-notifications/): receive an email notification when your website experiences a traffic spike.
+
+You can [purchase Koko Analytics Pro here](https://www.kokoanalytics.com/pricing/).
 
 
 ### Contributing
 
-You can contribute to Koko Analytics in many different ways. For example:
+You can help with Koko Analytics in many different ways. For example:
 
 - [Purchase Koko Analytics Pro](https://www.kokoanalytics.com/pricing/)
 - Write about the plugin on your blog or share it on social media.
@@ -58,6 +65,10 @@ You can contribute to Koko Analytics in many different ways. For example:
 - [Translate the plugin into your language](https://translate.wordpress.org/projects/wp-plugins/koko-analytics/stable/) using your WordPress.org account.
 - [Vote on feature suggestions in our idea board](https://github.com/ibericode/koko-analytics/discussions/categories/ideas?discussions_q=is%3Aopen+sort%3Atop+created%3A%3E%3D2022-10-25+category%3AIdeas)
 
+
+### About the plugin author
+
+Koko Analytics is developed by [Danny van Kooten](https://www.dannyvankooten.com/) from his home office in Nijmegen, The Netherlands.
 
 == Installation ==
 
@@ -120,8 +131,13 @@ Example use with arguments:
 [koko_analytics_counter days="30" metric="pageviews" global="true"]
 `
 
+### Why are category and tag archives not tracked?
+
+Koko Analytics is currently only able to track things that have an internal post ID, which is every (custom) post type. This is so that Koko Analytics does not have to store pathnames, which would take up a lot of storage space or an additional pre-processing step to normalize the data.
+
 ### How can I help fund Koko Analytics?
 You can [purchase Koko Analytics Pro](https://www.kokoanalytics.com/pricing/) to help fund the plugin.
+
 
 
 == Screenshots ==
@@ -131,9 +147,126 @@ You can [purchase Koko Analytics Pro](https://www.kokoanalytics.com/pricing/) to
 3. A widget to show your most viewed posts (or any other post type) for a given period.
 4. The settings page where you can exclude certain user roles from being counted.
 5. Screenshot of settings page showing some features from Koko Analytics Pro.
+6. Koko Analytics Pro can show your pageviews over a configurable time period right in your posts overview.
 
 
 == Changelog ==
+
+### 1.7.2 - Mar 24, 2025
+
+- Hide chart group options on dashboard widget chart.
+- Run referrer URL's in dashboard widget through href normalizer.
+- Very minor performance optimisation for generating chart HTML.
+
+
+### 1.7.1 - Mar 10, 2025
+
+- Fix chart bars being out of order for some databases in case of gaps in data.
+- Include `manifest.json` file in plugin package.
+- Check if uploads directory exists before calling `scandir`.
+- Fix Query Loop Block from showing all posts in case of no stats.
+- Address some W3C validation warnings for the dashboard HTML.
+- Aggregate Reddit subdomains into a single referrer entry.
+
+
+### 1.7.0 - Feb 25, 2025
+
+- Compatibility with sites hosted on WP Engine (which does not allow writing files with the PHP extension to the WP Uploads directory).
+- Use relative paths in optimized endpoint file, so that the site itself can be moved around freely on the filesystem.
+- Run aggregator on `upgrader_process_complete` hook so that we can change aggregation logic without losing any data.
+- Only use optimized endpoint if the file still exists and is verified to be working. This allows removing the file to immediately switch to the default AJAX endpoint.
+- Fix a bug in the most viewed posts widget/shortcode that shows all posts instead of an empty result set.
+- Add group by option to chart.
+- Better align periods for comparisons.
+
+
+### 1.6.6 - Feb 18, 2025
+
+- Fix same-page referrer detection when not using cookie.
+- Preserve page filter when using datepicker to change date period.
+- Limit realtime pageviews in dashboard widget to today's pageviews when viewed shortly after midnight.
+
+
+### 1.6.5 - Feb 10, 2025
+
+- Add importer for data from Burst Statistics.
+- Allow passing "false" and "no" to `monthly` query parameter in REST endpoints.
+- Optimize PHP execution time for plugin bootstrapping code by aggressively lazy loading code that only runs on very specific requests. From 0.05 ms to 0.03 ms (!) with OPcache or 1.44 ms to 0.54 ms without OPcache for general requests.
+- Minor code improvements to classes responsible for aggregating data from buffer file into permanent storage.
+
+
+### 1.6.4 - Jan 25, 2025
+
+- Fix dashboard data always publicly accessible through REST API endpoints.
+
+
+### 1.6.3 - Jan 21, 2025
+
+- Schedule missing `koko_analytics_aggregate_stats` event.
+- Ensure pageview counts are always added to the correct day, even if WP Cron stalls for more than 24 hours.
+- Improved correctness of the realtime visitor count in case of WP Cron stalls.
+- Move the temporary buffer file to its own directory inside the uploads directory.
+- Fix syntax error on PHP 7.4 introduced in version 1.6.2
+- Jetpack Importer: Fix division by zero if importing a single day of data
+- Jetpack Importer: Bump HTTP request timeout for Jetpack importer up from 5 seconds to 90 seconds.
+- Jetpack Importer: Allow choosing a custom chunk size, which can be useful for sites with a large amount of posts or pages.
+- Do not delete database tables on plugin uninstall by default.
+
+
+### 1.6.1 - Jan 20, 2025
+
+- Show error details in Jetpack Importer when API returns an error response (instead of only writing to error log).
+- Register scheduled event for pruning data on plugin activation directly.
+- Allow calling `get_realtime_pageview_count()` function with `null` parameter.
+
+
+### 1.6.0 - Jan 17, 2025
+
+- Bump minimal required PHP version to 7.4 or higher.
+- Fix issue with date generation for "this_week" and "last_week" presets.
+- Modify chart tooltip position so it's never causing horizontal overflow.
+- Hide chart tooltip on scroll.
+- Expand column width of pageviews and visitors column on large screens with ample space.
+- Fix undefined array key notice introduced in version 1.5.5.
+- Make all strings from Jetpack Importer feature translatable. Thanks to [Alex Lion](https://alexclassroom.com/).
+- Fix REST API routes returning a HTTP 500 error if called without a `start_date` parameter.
+
+PS. We've started the works on a [standalone version of Koko Analytics](https://github.com/koko-analytics/koko-analytics/) that allows you to track non-WordPress sites.
+
+You can read some more about it on Danny's personal blog: https://www.dannyvankooten.com/blog/2025/building-privacy-friendly-website-analytics/
+
+
+### 1.5.5 - Jan 10, 2025
+
+Don't use `upgrader_process_complete` for checking pending database migration. This can't be used because this specific hook runs using the old version of the plugin...
+
+Reverting this change from version 1.5.2 fixes an issue with the optimized endpoint file referencing an unexisting function.
+
+
+#### 1.5.4 - Jan 10, 2025
+
+- Fix optimized endpoint file referencing no-longer existing file on some installations.
+
+
+#### 1.5.3 - Jan 09, 2025
+
+- Add integration with Query Loop Block.
+- Fix date range when viewing "this week" or "last week" on a Sunday.
+- Remove non-functional settings example from [Koko Analytics Pro](https://www.kokoanalytics.com/pricing/) from settings page.
+- Add one-time notice after at least 30 days of usage asking for a contribution.
+
+
+#### 1.5.2 - Dec 17, 2024
+
+- Improve logic for running pending database migrations.
+
+
+#### 1.5.1 - Dec 10, 2024
+
+- Fix date in chart tooltip using default PHP timezone, explicitly use site timezone instead.
+- Check for excluded request (by IP address or user role) in unoptimized endpoint.
+- Prevent PHP notice on dashboard if page URL does not have query component.
+
 
 #### 1.5.0 - Nov 27, 2024
 
@@ -651,81 +784,5 @@ If your WordPress root directory is not writable, go to the Koko Analytics setti
 #### 1.0.6 - Jan 20, 2020
 
 - Remember view period when navigating away from analytics dashboard.
-- Add filter hook to prevent loading the tracking script: `koko_analytics_load_tracking_script`
-- Ignore all user agents containing the word `seo`
-- Ignore requests if page is loaded inside an iframe.
-- Only read `document.cookie` if cookie use is actually enabled.
-- In chart, use separate bars instead of stacked bars.
-
-
-#### 1.0.5 - Dec 30, 2019
-
-- Add "today" option to date periods preset menu.
-- Hide chart component when viewing just a single day of data.
-- Automatically refresh data in dashboard every minute.
-- Use human readable number format on chart's y-axes.
-- Show chart elements even if outside of chart container.
-
-
-#### 1.0.4 - Dec 13, 2019
-
-- Fix referrer URL's not being saved correctly.
-- Fix unique pageview detection
-- Fix pretty number with only trailing zeroes.
-- Fix bar chart not stacking properly.
-- Improved display of Twitter or Android app referrers.
-- Improved chart tooltip.
-- Improved styling for small mobile screens.
-- Trim trailing slashes from referrer URL's.
-- Escape all strings coming from translation files.
-- Filter out common bots by checking user agent in tracking script.
-
-
-#### 1.0.3 - Dec 6, 2019
-
-- Fix link to settings page from plugins overview page.
-- Fix REST API URL's when not using pretty permalinks.
-- Add support for tracking AMP-powered pages.
-- Add setting to disable cookie usage.
-- Handle network request errors on admin pages.
-- Return HTTP 500 error when unable to write to buffer file.
-- Simplify adding post title to post type statistics.
-- Extend browser support to include older browsers.
-- Handle filesystem errors in aggregation process.
-
-
-#### 1.0.2 - Nov 22, 2019
-
-- Add icons to datepickers to quickly cycle through selected date periods.
-- Add capabilities `view_koko_analytics` and `manage_koko_analytics` to control whether a user role can view or manage statistics.
-- Add setting to automatically delete data older than X months.
-- Add menu item to WP Admin Bar.
-- Update URL when date range changes so page can be refreshed or shared.
-- Update browser history with chosen date ranges.
-- Show total size of Koko Analytics' database tables on settings page.
-- Improved animations when dashboard data updates.
-- Improved column type constraints for storing data.
-- Improved labels for chart x-axes.
-- Consistent ordering of posts and referrers tables.
-- Remove trailing `?` character from referrer URL's after query parameters are stripped.
-- Fix retrieving post title when post type is excluded from search.
-
-
-#### 1.0.1 - Nov 14, 2019
-
-- Add dashboard widget showing site visits over last 14 days.
-- Add widget for showing most viewed posts, pages or any other post type over a given period.
-- Add `[koko_analytics_most_viewed_posts]` shortcode.
-- Add pagination to tables showing top posts and top referrers.
-- Add settings link to plugin row on plugins overview page in WP admin.
-- Use ASCII for storing textual data. Fixes an issue with error message "specified key is too long" on some MySQL installations when the charset is `utf8mb4`.
-- Remove all data when uninstalling the plugin. Thanks to [Santiago Degetau](https://profiles.wordpress.org/tausworks/).
-- Improved memory usage when handling huge bursts of traffic.
-- Load tracking script asynchronously.
-- Styling improvements for the dashboard page.
-
-
-#### 1.0.0 - Nov 4, 2019
-
-Initial release.
+- Add filter hook to prevent loading the tracking ...
 

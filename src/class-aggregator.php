@@ -12,66 +12,33 @@ use Exception;
 
 class Aggregator
 {
-    public function __construct()
-    {
-        add_action('koko_analytics_aggregate_stats', array($this, 'aggregate'), 10, 0);
-        add_filter('cron_schedules', array($this, 'add_interval'), 10, 1);
-        add_action('init', array($this, 'maybe_setup_scheduled_event'), 10, 0);
-    }
-
-    /**
-     * @param array $intervals
-     */
-    public function add_interval($intervals): array
-    {
-        $intervals['koko_analytics_stats_aggregate_interval'] = array(
-            'interval' => 60, // 60 seconds
-            'display'  => esc_html__('Every minute', 'koko-analytics'),
-        );
-        return $intervals;
-    }
-
-    public function setup_scheduled_event(): void
-    {
-        if (! wp_next_scheduled('koko_analytics_aggregate_stats')) {
-            wp_schedule_event(time() + 60, 'koko_analytics_stats_aggregate_interval', 'koko_analytics_aggregate_stats');
-        }
-    }
-
-    public function maybe_setup_scheduled_event(): void
-    {
-        if (! isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST' || ! is_admin()) {
-            return;
-        }
-
-        $this->setup_scheduled_event();
-    }
-
     /**
      * Reads the buffer file into memory and moves data into the MySQL database (in bulk)
      *
      * @throws Exception
      */
-    public function aggregate(): void
+    public static function run(): void
     {
-        update_option('koko_analytics_last_aggregation_at', time(), true);
+        update_option('koko_analytics_last_aggregation_at', \time(), true);
+
+        $buffer_file = get_buffer_filename();
+
+        // if buffer file does not exist, nothing happened since last aggregation
+        if (! \is_file($buffer_file)) {
+            return;
+        }
 
         // init pageview aggregator
         $pageview_aggregator = new Pageview_Aggregator();
 
-        // read pageviews buffer file into array
-        $filename = get_buffer_filename();
-        if (! \is_file($filename)) {
-            // no pageviews were collected since last run, so we have nothing to do
-            return;
-        }
-
         // rename file to temporary location so nothing new is written to it while we process it
-        $tmp_filename = \dirname($filename) . '/pageviews-' . time() . '.php';
-        $renamed = \rename($filename, $tmp_filename);
+        $tmp_filename = $buffer_file . '.busy';
+        $renamed = \rename($buffer_file, $tmp_filename);
         if ($renamed !== true) {
             if (WP_DEBUG) {
                 throw new Exception('Error renaming buffer file.');
+            } else {
+                error_log('Koko Analytics: error renaming buffer file');
             }
             return;
         }
@@ -81,20 +48,23 @@ class Aggregator
         if (! $file_handle) {
             if (WP_DEBUG) {
                 throw new Exception('Error opening buffer file for reading.');
+            } else {
+                error_log('Koko Analytics: error opening buffer file for reading');
             }
             return;
         }
 
-        // read and ignore first line (the PHP header that prevents direct file access)
-        \fgets($file_handle, 1024);
-
-        while (($line = \fgets($file_handle, 1024)) !== false) {
+        while (($line = \fgets($file_handle)) !== false) {
             $line = \trim($line);
             if ($line === '' || $line === '<?php exit; ?>') {
                 continue;
             }
 
-            $params = \explode(',', $line);
+            $params = \unserialize($line, ['allowed_classes' => false]);
+            if (! \is_array($params)) {
+                error_log('Koko Analytics: unserialize error encountered while processing line in buffer file');
+                continue;
+            }
             $type   = \array_shift($params);
 
             // core aggregator
@@ -111,5 +81,17 @@ class Aggregator
         // tell aggregators to write their results to the database
         $pageview_aggregator->finish();
         do_action('koko_analytics_aggregate_finish');
+    }
+
+    public static function setup_scheduled_event(): void
+    {
+        if (! wp_next_scheduled('koko_analytics_aggregate_stats')) {
+            wp_schedule_event(time() + 60, 'koko_analytics_stats_aggregate_interval', 'koko_analytics_aggregate_stats');
+        }
+    }
+
+    public static function clear_scheduled_event(): void
+    {
+        wp_clear_scheduled_hook('koko_analytics_aggregate_stats');
     }
 }

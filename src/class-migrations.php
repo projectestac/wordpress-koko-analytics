@@ -24,12 +24,6 @@ class Migrations
         $this->version_from = get_option($this->option_name, '0.0.0');
         $this->version_to = $version_to;
         $this->migrations_dir = $migrations_dir;
-        $this->hook();
-    }
-
-    public function hook(): void
-    {
-        add_action('init', [$this, 'maybe_run'], 5, 0);
     }
 
     public function maybe_run(): void
@@ -58,13 +52,17 @@ class Migrations
             return;
         }
 
+        // run each migration file
         foreach ($files as $file) {
             $this->handle_file($file);
         }
+
+        // update database version to current code version
+        update_option($this->option_name, $this->version_to, true);
     }
 
     /**
-     * @var string Absolute path to migration file
+     * @param string Absolute path to migration file
      */
     protected function handle_file(string $file): void
     {

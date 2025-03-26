@@ -1,5 +1,121 @@
 # Changelog
 
+### 1.7.2 - Mar 24, 2025
+
+- Hide chart group options on dashboard widget chart.
+- Run referrer URL's in dashboard widget through href normalizer.
+- Very minor performance optimisation for generating chart HTML.
+
+
+### 1.7.1 - Mar 10, 2025
+
+- Fix chart bars being out of order for some databases in case of gaps in data.
+- Include `manifest.json` file in plugin package.
+- Check if uploads directory exists before calling `scandir`.
+- Fix Query Loop Block from showing all posts in case of no stats.
+- Address some W3C validation warnings for the dashboard HTML.
+- Aggregate Reddit subdomains into a single referrer entry.
+
+
+### 1.7.0 - Feb 25, 2025
+
+- Compatibility with sites hosted on WP Engine (which does not allow writing files with the PHP extension to the WP Uploads directory).
+- Use relative paths in optimized endpoint file, so that the site itself can be moved around freely on the filesystem.
+- Run aggregator on `upgrader_process_complete` hook so that we can change aggregation logic without losing any data.
+- Only use optimized endpoint if the file still exists and is verified to be working. This allows removing the file to immediately switch to the default AJAX endpoint.
+- Fix a bug in the most viewed posts widget/shortcode that shows all posts instead of an empty result set.
+- Add group by option to chart.
+- Better align periods for comparisons.
+
+
+### 1.6.6 - Feb 18, 2025
+
+- Fix same-page referrer detection when not using cookie.
+- Preserve page filter when using datepicker to change date period.
+- Limit realtime pageviews in dashboard widget to today's pageviews when viewed shortly after midnight.
+
+
+### 1.6.5 - Feb 10, 2025
+
+- Add importer for data from Burst Statistics.
+- Allow passing "false" and "no" to `monthly` query parameter in REST endpoints.
+- Optimize PHP execution time for plugin bootstrapping code by aggressively lazy loading code that only runs on very specific requests. From 0.05 ms to 0.03 ms (!) with OPcache or 1.44 ms to 0.54 ms without OPcache for general requests.
+- Minor code improvements to classes responsible for aggregating data from buffer file into permanent storage.
+
+
+### 1.6.4 - Jan 25, 2025
+
+- Fix dashboard data always publicly accessible through REST API endpoints.
+
+
+### 1.6.3 - Jan 21, 2025
+
+- Schedule missing `koko_analytics_aggregate_stats` event.
+- Ensure pageview counts are always added to the correct day, even if WP Cron stalls for more than 24 hours.
+- Improved correctness of the realtime visitor count in case of WP Cron stalls.
+- Move the temporary buffer file to its own directory inside the uploads directory.
+- Fix syntax error on PHP 7.4 introduced in version 1.6.2
+- Jetpack Importer: Fix division by zero if importing a single day of data
+- Jetpack Importer: Bump HTTP request timeout for Jetpack importer up from 5 seconds to 90 seconds.
+- Jetpack Importer: Allow choosing a custom chunk size, which can be useful for sites with a large amount of posts or pages.
+- Do not delete database tables on plugin uninstall by default.
+
+
+### 1.6.1 - Jan 20, 2025
+
+- Show error details in Jetpack Importer when API returns an error response (instead of only writing to error log).
+- Register scheduled event for pruning data on plugin activation directly.
+- Allow calling `get_realtime_pageview_count()` function with `null` parameter.
+
+
+### 1.6.0 - Jan 17, 2025
+
+- Bump minimal required PHP version to 7.4 or higher.
+- Fix issue with date generation for "this_week" and "last_week" presets.
+- Modify chart tooltip position so it's never causing horizontal overflow.
+- Hide chart tooltip on scroll.
+- Expand column width of pageviews and visitors column on large screens with ample space.
+- Fix undefined array key notice introduced in version 1.5.5.
+- Make all strings from Jetpack Importer feature translatable. Thanks to [Alex Lion](https://alexclassroom.com/).
+- Fix REST API routes returning a HTTP 500 error if called without a `start_date` parameter.
+
+PS. We've started the works on a [standalone version of Koko Analytics](https://github.com/koko-analytics/koko-analytics/) that allows you to track non-WordPress sites.
+
+You can read some more about it on Danny's personal blog: https://www.dannyvankooten.com/blog/2025/building-privacy-friendly-website-analytics/
+
+
+### 1.5.5 - Jan 10, 2025
+
+Don't use `upgrader_process_complete` for checking pending database migration. This can't be used because this specific hook runs using the old version of the plugin...
+
+Reverting this change from version 1.5.2 fixes an issue with the optimized endpoint file referencing an unexisting function.
+
+
+#### 1.5.4 - Jan 10, 2025
+
+- Fix optimized endpoint file referencing no-longer existing file on some installations.
+
+
+#### 1.5.3 - Jan 09, 2025
+
+- Add integration with Query Loop Block.
+- Fix date range when viewing "this week" or "last week" on a Sunday.
+- Remove non-functional settings example from [Koko Analytics Pro](https://www.kokoanalytics.com/pricing/) from settings page.
+- Add one-time notice after at least 30 days of usage asking for a contribution.
+
+
+#### 1.5.2 - Dec 17, 2024
+
+- Improve logic for running pending database migrations.
+
+
+#### 1.5.1 - Dec 10, 2024
+
+- Fix date in chart tooltip using default PHP timezone, explicitly use site timezone instead.
+- Check for excluded request (by IP address or user role) in unoptimized endpoint.
+- Prevent PHP notice on dashboard if page URL does not have query component.
+
+
 #### 1.5.0 - Nov 27, 2024
 
 - Impose a maximum referrer URL length on data ingestion.
