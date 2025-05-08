@@ -29,7 +29,6 @@ class Admin
             add_filter('plugin_action_links_' . $plugin_basename, [$this, 'add_plugin_settings_link'], 10, 1);
             add_filter('plugin_row_meta', [$this, 'add_plugin_meta_links'], 10, 2);
         }
-    }
 
         // actions for jetpack importer
         add_action('koko_analytics_show_jetpack_importer_page', [Jetpack_Importer::class, 'show_page'], 10, 0);
