@@ -179,9 +179,20 @@ class Admin
 
     public function enqueue_scripts($hook_suffix): void
     {
+        /*
+        // XTEC ************ MODIFICAT - Add settings page to the list of pages where the scripts are loaded.
+        // 2025.05.09 @corentin.robin
+        */
+        if ($hook_suffix !== 'dashboard_page_koko-analytics' && $hook_suffix !== 'settings_page_koko-analytics') {
+            return;
+        }
+        /*
+        //************ ORIGINAL
         if ($hook_suffix !== 'dashboard_page_koko-analytics') {
             return;
         }
+        //************ FI
+        */
 
         wp_enqueue_style('koko-analytics-dashboard', plugins_url('assets/dist/css/dashboard.css', KOKO_ANALYTICS_PLUGIN_FILE), [], KOKO_ANALYTICS_VERSION);
         wp_enqueue_script('koko-analytics-dashboard', plugins_url('assets/dist/js/dashboard.js', KOKO_ANALYTICS_PLUGIN_FILE), [], KOKO_ANALYTICS_VERSION, [ 'strategy' => 'defer' ]);
