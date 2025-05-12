@@ -108,7 +108,15 @@ class Admin_Page
             return true;
         }
 
+        // XTEC ************ MODIFICAT - Avoid false positives. By default, cron is scheduled to run every 15 minutes.
+        // 2024.10.01 @aginard
+        return true;
+        // ************ ORIGINAL
+        /*
         return $next_scheduled !== false && $next_scheduled > (time() - 40 * 60);
+        */
+        // ************ FI
+
     }
 
     /**

@@ -110,6 +110,15 @@ EOT;
 
     public function is_eligibile(): bool
     {
+
+        // XTEC ************ AFEGIT - Hide code to generate file koko-analytics-collect.php in settings to all users except
+        //                            xtecadmin.
+        // 2025.05.12 @aginard
+        if (!is_xtecadmin()) {
+            return false;
+        }
+        // ************ FI
+
         /* Do nothing if running Multisite (because Multisite has separate uploads directory per site) */
         if (is_multisite()) {
             return false;
